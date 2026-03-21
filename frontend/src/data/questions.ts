@@ -337,6 +337,13 @@ export const questions: Question[] = [
     ],
   },
   {
+    id: "wishlist",
+    category: "Preferences",
+    question: "Anything specific you want — or want to avoid?",
+    subtext: "Free text — be as specific as you like. Examples: \"I want international exposure\", \"no TSLA or NVDA\", \"heavy on dividends\", \"avoid crypto\".",
+    type: "textarea",
+  },
+  {
     id: "avoid_areas",
     category: "Preferences",
     question: "Anything you want to keep out of your portfolio?",

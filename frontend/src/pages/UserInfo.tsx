@@ -43,7 +43,7 @@ const UserInfoPage: React.FC = () => {
     const formData = new FormData();
     formData.append("file", f);
     try {
-      const res = await axios.post("http://localhost:4000/api/parse-portfolio", formData, {
+      const res = await axios.post("${process.env.REACT_APP_API_URL}/api/parse-portfolio", formData, {
         headers: { "Content-Type": "multipart/form-data" },
       });
       if (res.data.holdings?.length > 0) {

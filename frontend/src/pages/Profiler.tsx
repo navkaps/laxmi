@@ -88,6 +88,7 @@ const Profiler: React.FC = () => {
   const isAnswered = (): boolean => {
     if (question.type === "slider") return answer !== undefined && answer !== null;
     if (question.type === "multi") return true; // always skippable
+    if (question.type === "textarea") return true; // always skippable
     if (question.type === "single") {
       if (!answer) return false;
       if (answer === "other") return (otherText[question.id] || "").trim().length > 0;
@@ -267,6 +268,17 @@ const Profiler: React.FC = () => {
                   </div>
                 )}
 
+                {question.type === "textarea" && (
+                  <textarea
+                    autoFocus
+                    rows={4}
+                    value={(answer as string) || ""}
+                    onChange={(e) => setProfile((p) => ({ ...p, [question.id]: e.target.value }))}
+                    placeholder="Type anything — specific tickers to include or exclude, themes you care about, concentrations you want to avoid..."
+                    className="w-full bg-transparent border border-white/10 rounded px-4 py-3 font-sans text-sm text-cream-50 placeholder:text-cream-200/25 focus:outline-none focus:border-gold-500/50 transition-colors resize-none leading-relaxed"
+                  />
+                )}
+
                 {question.type === "slider" && question.sliderConfig && (
                   <div className="py-8 px-2">
                     <SliderInput
@@ -299,7 +311,7 @@ const Profiler: React.FC = () => {
           </button>
 
           <div className="flex items-center gap-4">
-            {question.type === "multi" && (
+            {(question.type === "multi" || question.type === "textarea") && (
               <button
                 onClick={handleNext}
                 className="text-cream-200/30 hover:text-cream-200/60 text-xs tracking-widest uppercase font-sans transition-colors"

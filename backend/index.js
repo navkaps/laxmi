@@ -5,6 +5,9 @@ const path = require("path");
 const multer = require("multer");
 const xlsx = require("xlsx");
 const fs = require("fs");
+require("dotenv").config();
+const Anthropic = require("@anthropic-ai/sdk");
+const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 
 // PDF text extraction using pdf2json
 let PDFParser = null;
@@ -349,15 +352,99 @@ function getIndiaPortfolioProfiles() {
 }
 
 // ─── Routes ─────────────────────────────────────────────────────────────────────
-app.post("/api/recommend", (req, res) => {
+app.post("/api/recommend", async (req, res) => {
   const { profile, userInfo, tuneLevel } = req.body;
   if (!profile) return res.status(400).json({ error: "Profile is required" });
 
   const country = userInfo?.country || "US";
   const isIndia = country === "IN";
 
-  setTimeout(() => {
-    const recommendation = buildPortfolio(profile, tuneLevel, isIndia);
+  // Build the 5 static profile labels for the tuner slider (kept as metadata)
+  const allProfiles = isIndia ? getIndiaPortfolioProfiles() : getPortfolioProfiles();
+  const allProfilesMeta = allProfiles.map(({ level, riskProfile, expectedAnnualReturn, volatility }) => ({
+    level, riskProfile, expectedAnnualReturn, volatility,
+  }));
+
+  // Determine the target risk level (0=very conservative … 4=aggressive)
+  const riskMap = { steady: 0, balanced: 2, growth: 4 };
+  const crashMap = { sell_all: -1, sell_some: 0, hold: 1, buy_more: 2 };
+  const goalMap = { preserve: -1, income: 0, retirement: 1, wealth_building: 2, retire_early: 2 };
+  const age = Number(profile.age) || 35;
+  const ageFactor = age > 55 ? -1 : age < 35 ? 1 : 0;
+  const maxLoss = Number(profile.max_loss) || 20;
+  const lossAdjust = maxLoss < 15 ? -1 : maxLoss > 30 ? 1 : 0;
+  const baseScore = (riskMap[profile.risk_visual] ?? 2) + (crashMap[profile.crash_behavior] ?? 0) + (goalMap[profile.goal] ?? 1) + ageFactor + lossAdjust;
+  const profileLevel = Math.max(0, Math.min(4, Math.round(baseScore / 1.4)));
+  const level = tuneLevel !== undefined && tuneLevel !== null ? Math.max(0, Math.min(4, tuneLevel)) : profileLevel;
+  const riskLabel = allProfilesMeta[level].riskProfile;
+
+  const systemPrompt = `You are Laxmi, a sharp and empathetic AI financial advisor. You generate deeply personalized investment portfolio recommendations — not generic templates. Every response must reflect the specific investor's profile, goals, age, and behavior.
+
+You always respond with a single valid JSON object. No markdown, no commentary, only the JSON.`;
+
+  const userPrompt = `Generate a personalized investment portfolio recommendation for this investor:
+
+Profile:
+- Age: ${profile.age}
+- Country: ${isIndia ? "India" : "United States"}
+- Goal: ${profile.goal}
+- Risk appetite (self-described): ${profile.risk_visual}
+- Crash behavior: ${profile.crash_behavior}
+- Max acceptable loss: ${profile.max_loss}%
+- Target risk level: ${riskLabel} (level ${level} of 4)
+${profile.investment_horizon ? `- Investment horizon: ${profile.investment_horizon}` : ""}
+${profile.income ? `- Monthly income: ${profile.income}` : ""}
+${profile.wishlist ? `- Specific wishlist / exclusions (MUST be honoured): ${profile.wishlist}` : ""}
+${profile.focus_areas?.length ? `- Sectors to lean into: ${profile.focus_areas.join(", ")}` : ""}
+${profile.avoid_areas?.length ? `- Sectors/instruments to exclude: ${profile.avoid_areas.join(", ")}` : ""}
+${profile.notes ? `- Additional context: ${profile.notes}` : ""}
+
+Return a JSON object with exactly these fields:
+{
+  "riskProfile": "${riskLabel}",
+  "profileLevel": ${level},
+  "expectedAnnualReturn": "e.g. 7–10% p.a.",
+  "volatility": "e.g. Moderate (12–18%)",
+  "profileSummary": "2–3 sentence paragraph describing this specific investor and why this portfolio suits them. Make it feel personal.",
+  "rationale": "2–3 sentence paragraph explaining the portfolio construction logic.",
+  "keyStrengths": ["3 specific strengths of this portfolio for this investor"],
+  "considerations": ["3 honest risks or caveats for this specific investor"],
+  "holdings": [
+    {
+      "ticker": "${isIndia ? "e.g. NIFTYBEES" : "e.g. VTI"}",
+      "name": "Full fund or stock name",
+      "type": "ETF or Stock or Bond",
+      "allocation": 25,
+      "sector": "Sector name",
+      "rationale": "1 sentence specific to this investor's situation"
+    }
+  ]
+}
+
+Holdings rules:
+- Use ${isIndia ? "Indian market tickers (NSE/BSE)" : "US market tickers"}.
+- Allocations must sum to exactly 100.
+- Include 5–8 holdings appropriate for the ${riskLabel} risk level.
+- Vary holdings and rationale based on the investor's specific goal (${profile.goal}), age (${profile.age}), and crash behavior (${profile.crash_behavior}). Do NOT use generic templates.`;
+
+  try {
+    const message = await anthropic.messages.create({
+      model: "claude-opus-4-6",
+      max_tokens: 2000,
+      messages: [{ role: "user", content: userPrompt }],
+      system: systemPrompt,
+    });
+
+    const raw = message.content[0].text.trim().replace(/^```(?:json)?\n?/, "").replace(/\n?```$/, "");
+    const recommendation = JSON.parse(raw);
+
+    // Attach backtest data using equity/bond split inferred from holdings
+    const equityPct = level >= 3 ? 0.85 : level === 2 ? 0.65 : level === 1 ? 0.45 : 0.25;
+    const bondPct = 1 - equityPct;
+    const amplifier = 0.6 + level * 0.2;
+    recommendation.backtestData = generateBacktest(equityPct, bondPct, amplifier);
+    recommendation.profileLevel = level;
+    recommendation.allProfiles = allProfilesMeta;
 
     // Save to database
     try {
@@ -368,14 +455,17 @@ app.post("/api/recommend", (req, res) => {
         country: userInfo?.country || null,
         profile: JSON.stringify(profile),
         risk_profile: recommendation.riskProfile,
-        tune_level: tuneLevel ?? recommendation.profileLevel,
+        tune_level: level,
       });
     } catch (e) {
       console.error("DB save error:", e.message);
     }
 
     res.json(recommendation);
-  }, 3000);
+  } catch (e) {
+    console.error("Claude API error:", e.message);
+    res.status(500).json({ error: "Failed to generate recommendation. Please try again." });
+  }
 });
 
 // ─── Portfolio assessment ────────────────────────────────────────────────────────

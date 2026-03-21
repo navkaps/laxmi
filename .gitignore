@@ -6,3 +6,4 @@ backend/.env
 frontend/build/
 .DS_Store
 backend/uploads/
+backend/laxmi.db

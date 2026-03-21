@@ -1,4 +1,4 @@
-export type QuestionType = "single" | "slider" | "multi";
+export type QuestionType = "single" | "slider" | "multi" | "textarea";
 
 export interface QuestionOption {
   value: string;

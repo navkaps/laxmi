@@ -49,7 +49,7 @@ const Results: React.FC = () => {
       if (!isInitial) setTuning(true);
 
       axios
-        .post("http://localhost:4000/api/recommend", { profile, userInfo, tuneLevel: level })
+        .post(`${process.env.REACT_APP_API_URL}/api/recommend`, { profile, userInfo, tuneLevel: level })
         .then((res) => {
           setRecommendation(res.data);
           if (isInitial) setTuneLevel(res.data.profileLevel ?? 2);
