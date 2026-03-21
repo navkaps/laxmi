@@ -4,8 +4,34 @@ const Database = require("better-sqlite3");
 const path = require("path");
 const multer = require("multer");
 const xlsx = require("xlsx");
-const { parse: csvParse } = require("csv-parse/sync");
 const fs = require("fs");
+
+// PDF text extraction using pdf2json
+let PDFParser = null;
+try { PDFParser = require("pdf2json"); } catch (e) { console.warn("pdf2json not available:", e.message); }
+
+function extractPDFText(filePath) {
+  return new Promise((resolve, reject) => {
+    if (!PDFParser) return reject(new Error("PDF parser not available"));
+    const parser = new PDFParser(null, 1);
+    parser.on("pdfParser_dataReady", (data) => {
+      try {
+        const text = decodeURIComponent(
+          data.Pages.flatMap(p => p.Texts.map(t => t.R.map(r => r.T).join(" "))).join("\n")
+        );
+        resolve(text);
+      } catch { resolve(""); }
+    });
+    parser.on("pdfParser_dataError", reject);
+    parser.loadPDF(filePath);
+  });
+}
+
+// csv-parse: support both v4 (sync export) and v5+ (sync subpath)
+let csvParseSync;
+try { csvParseSync = require("csv-parse/sync").parse; } catch {
+  try { csvParseSync = require("csv-parse").parse; } catch { csvParseSync = null; }
+}
 
 const upload = multer({ dest: path.join(__dirname, "uploads/"), limits: { fileSize: 20 * 1024 * 1024 } });
 
@@ -441,14 +467,58 @@ function assessPortfolio(holdings) {
   if (numHoldings < 4) risks.push("Fewer than 4 holdings — highly concentrated. A single holding failure could materially impair the portfolio.");
   if (risks.length === 0) risks.push("Low obvious structural risks detected — focus on maintaining disciplined rebalancing.");
 
-  // Suggestions
+  // Suggestions — specific, actionable with real ticker recommendations
   const suggestions = [];
-  if (intlWeight < 10) suggestions.push({ action: "Add international diversification", detail: "Consider allocating 10–20% to VXUS (Vanguard Total International) or equivalent to reduce US-only exposure." });
-  if (techWeight > 40) suggestions.push({ action: "Reduce technology concentration", detail: `At ${Math.round(techWeight)}% technology, consider trimming and redeploying into sectors like healthcare, financials, or consumer staples.` });
-  if (fixedIncomeWeight < 5 && equityWeight > 75) suggestions.push({ action: "Introduce a fixed income buffer", detail: "Even a 10–15% allocation to BND or AGG would meaningfully reduce portfolio volatility without sacrificing long-term return." });
-  if (largestPosition > 25) suggestions.push({ action: "Reduce largest position", detail: `The ${holdings.find(h => (h.allocation / total) * 100 === largestPosition)?.ticker} position is too large. Consider trimming to below 20% and diversifying the proceeds.` });
-  if (numHoldings < 4) suggestions.push({ action: "Increase number of holdings", detail: "Expanding to 6–10 holdings would dramatically improve diversification without meaningful added complexity." });
-  if (suggestions.length === 0) suggestions.push({ action: "Maintain regular rebalancing", detail: "Your portfolio is reasonably structured. Review annually and rebalance if any position drifts more than 5% from target." });
+  const sortedBySize = [...holdings].sort((a, b) => (b.allocation / total) - (a.allocation / total));
+  const biggestTicker = sortedBySize[0]?.ticker;
+
+  if (largestPosition > 25) {
+    const targetAlloc = Math.round(largestPosition / 2);
+    const trimBy = Math.round(largestPosition - targetAlloc);
+    suggestions.push({
+      action: `Trim ${biggestTicker}: reduce from ${Math.round(largestPosition)}% to ~${targetAlloc}%`,
+      detail: `${biggestTicker} is ${Math.round(largestPosition)}% of your portfolio — any adverse event in a single stock has outsized impact. Sell ~${trimBy}% and redirect into a broad ETF like VTI or SPY to maintain your growth exposure with far less single-stock risk.`,
+    });
+  }
+
+  if (techWeight > 40) {
+    const techTickers = holdings
+      .filter(h => ["Technology", "Technology / Nasdaq", "Semiconductors", "Disruptive Innovation", "Technology / E-Commerce"].includes(TICKER_SECTORS[h.ticker.toUpperCase()]))
+      .sort((a, b) => b.allocation - a.allocation);
+    const topTech = techTickers[0]?.ticker;
+    suggestions.push({
+      action: `Rotate ${Math.round(techWeight - 30)}% out of tech into other sectors`,
+      detail: `Technology is ${Math.round(techWeight)}% of your portfolio. Consider trimming ${topTech || "your largest tech position"} and rotating into VHT (Healthcare ETF), XLF (Financials ETF), or VXUS (International) — sectors that typically hold up when tech corrects.`,
+    });
+  }
+
+  if (intlWeight < 8) {
+    suggestions.push({
+      action: "Add VXUS: 15–20% international allocation",
+      detail: `Your portfolio has no international exposure — it moves entirely with US market cycles. Allocating 15–20% to VXUS (Vanguard Total International Stock ETF) gives you exposure to Europe, Asia, and emerging markets and has historically reduced drawdowns by 5–10% in US-specific crises.`,
+    });
+  }
+
+  if (fixedIncomeWeight < 5 && equityWeight > 75) {
+    suggestions.push({
+      action: "Add BND: 10–15% bonds for downside protection",
+      detail: `With ${Math.round(equityWeight)}% in equities and near-zero fixed income, this portfolio could drop 40–50% in a severe bear market. A 10–15% allocation to BND (Vanguard Total Bond Market ETF) acts as a cushion — it rises when equities fall, giving you dry powder to rebalance at market lows.`,
+    });
+  }
+
+  if (numHoldings < 4) {
+    suggestions.push({
+      action: "Expand to 8–12 holdings for resilience",
+      detail: `With only ${numHoldings} position${numHoldings === 1 ? "" : "s"}, a single bad outcome is highly material. Consider replacing concentrated individual stocks with diversified ETFs: VTI (US broad market), VXUS (international), BND (bonds), and VGT (technology sector) provide nearly the same return profile with dramatically less risk.`,
+    });
+  }
+
+  if (suggestions.length === 0) {
+    suggestions.push({
+      action: "Rebalance annually — your structure is solid",
+      detail: "Your portfolio is well-diversified. Set a calendar reminder to review allocations once a year: trim any position that has drifted more than 5% above its target weight and redeploy into underweight positions. This alone adds ~0.5% annual return through systematic low-buy-high-sell discipline.",
+    });
+  }
 
   const verdict =
     score >= 80 ? "A well-constructed portfolio with thoughtful diversification. Minor adjustments could improve efficiency, but the core structure is sound."
@@ -459,117 +529,451 @@ function assessPortfolio(holdings) {
 }
 
 // ─── Portfolio file parser ───────────────────────────────────────────────────────
-function normaliseHoldings(rows) {
-  // Try to find ticker and allocation columns
-  const holdings = [];
-  rows.forEach((row) => {
-    const vals = Object.values(row).map((v) => String(v || "").trim());
-    const keys = Object.keys(row).map((k) => k.toLowerCase());
 
-    let ticker = null;
+// Exhaustive column name patterns for real brokerage exports
+const TICKER_KEYS   = ["symbol", "ticker", "stock", "security", "holding", "holdings", "instrument", "asset", "fund", "cusip", "name"];
+const ALLOC_KEYS    = ["percent of account", "% of account", "percent_of_portfolio", "% of portfolio", "portfolio %", "portfolio weight", "% weight", "weight", "allocation", "alloc", "pct", "account %", "portfolio percent", "% of total", "percentage", "portion"];
+const VALUE_KEYS    = ["current value", "market value", "total value ($)", "total value", "market val", "value", "equity", "amount", "position value", "mkt value"];
+
+function findColumnKey(rowKeys, patterns) {
+  // Exact match first
+  for (const pat of patterns) {
+    const found = rowKeys.find(k => k.toLowerCase().trim() === pat);
+    if (found) return found;
+  }
+  // Substring match
+  for (const pat of patterns) {
+    const clean = pat.replace(/[%\s]/g, "");
+    const found = rowKeys.find(k => k.toLowerCase().replace(/[%\s]/g, "").includes(clean));
+    if (found) return found;
+  }
+  return null;
+}
+
+function isValidTicker(str) {
+  const s = String(str || "").trim().toUpperCase().replace(/['"]/g, "");
+  const excluded = ["TOTAL", "CASH", "N/A", "NA", "PENDING", "ACCOUNT", "BALANCE", "OTHER",
+    "YTD", "ETF", "INC", "LLC", "LTD", "CORP", "USD", "EUR", "GBP", "INR", "CAD", "AUD",
+    "AND", "THE", "FOR", "TAX", "NET", "FEE", "DIV", "INT", "QTY", "EXT", "EST", "PER",
+    "NEW", "ALL", "ANY", "OUT", "BUY", "SELL", "QTR", "ANN", "AVG"];
+  return s.length >= 1 && s.length <= 10 && /^[A-Z][A-Z0-9.\-]*$/.test(s) && !excluded.includes(s);
+}
+
+function normaliseHoldings(rows) {
+  if (!rows || rows.length === 0) return [];
+
+  const rowKeys = Object.keys(rows[0]);
+
+  // ── 1. Name-based column detection ───────────────────────────────────────────
+  let tickerKey = findColumnKey(rowKeys, TICKER_KEYS);
+  let allocKey  = findColumnKey(rowKeys, ALLOC_KEYS);
+  let valueKey  = findColumnKey(rowKeys, VALUE_KEYS);
+
+  // ── 2. Content-based fallback — detect columns by what's actually in them ────
+  // This handles any brokerage CSV regardless of column naming convention.
+  if (!tickerKey) {
+    // Ticker column: >50% of non-empty values pass isValidTicker
+    for (const key of rowKeys) {
+      const vals = rows.map(r => String(r[key] || "").trim()).filter(Boolean);
+      const valid = vals.filter(v => isValidTicker(v.toUpperCase().replace(/['"]/g, "")));
+      if (vals.length > 0 && valid.length / vals.length > 0.5) { tickerKey = key; break; }
+    }
+  }
+
+  if (!allocKey && !valueKey) {
+    // Find numeric columns — check if they look like percentages (sum ≈ 100) or market values (large $)
+    const numericCols = rowKeys
+      .filter(k => k !== tickerKey)
+      .map(key => {
+        const nums = rows.map(r => parseFloat(String(r[key] || "").replace(/[$%,\s]/g, ""))).filter(n => !isNaN(n) && n > 0);
+        return { key, nums, sum: nums.reduce((s, v) => s + v, 0), max: Math.max(...nums, 0) };
+      })
+      .filter(c => c.nums.length / rows.length > 0.4);
+
+    // Allocation column: all values ≤ 100 AND they sum close to 100
+    const pctCol = numericCols.find(c => c.max <= 100 && c.sum > 80 && c.sum < 120);
+    if (pctCol) { allocKey = pctCol.key; }
+    // Value column: has numbers > $100 (market values)
+    else {
+      const valCol = numericCols.find(c => c.max > 100);
+      if (valCol) valueKey = valCol.key;
+    }
+  }
+
+  if (!tickerKey) {
+    console.log("No ticker column found. Available keys:", rowKeys);
+    return [];
+  }
+
+  const rawHoldings = [];
+
+  rows.forEach((row) => {
+    const ticker = String(row[tickerKey] || "").trim().toUpperCase().replace(/['"]/g, "");
+    if (!isValidTicker(ticker)) return;
+
     let allocation = null;
 
-    // Ticker column heuristics
-    const tickerIdx = keys.findIndex((k) =>
-      k.includes("ticker") || k.includes("symbol") || k.includes("stock") || k === "security"
-    );
-    if (tickerIdx >= 0) ticker = vals[tickerIdx];
-
-    // Allocation column heuristics
-    const allocIdx = keys.findIndex((k) =>
-      k.includes("alloc") || k.includes("weight") || k.includes("percent") || k.includes("%") || k.includes("portion")
-    );
-    if (allocIdx >= 0) {
-      allocation = parseFloat(String(vals[allocIdx]).replace(/[%,]/g, ""));
+    if (allocKey) {
+      const raw = String(row[allocKey] || "").replace(/[%,$\s"]/g, "");
+      const n = parseFloat(raw);
+      if (!isNaN(n) && n > 0 && n <= 100) allocation = n;
     }
 
-    // Fallback: scan all values for ticker-like strings
-    if (!ticker) {
-      const tickerVal = vals.find((v) => /^[A-Z]{2,6}$/.test(v));
-      if (tickerVal) ticker = tickerVal;
-    }
-    if (!allocation) {
-      const numVal = vals.find((v) => /^\d{1,3}(\.\d+)?$/.test(v) && parseFloat(v) <= 100);
-      if (numVal) allocation = parseFloat(numVal);
-    }
-
-    if (ticker && allocation && allocation > 0) {
-      holdings.push({ ticker: ticker.toUpperCase(), allocation });
+    if (allocation) {
+      rawHoldings.push({ ticker, allocation });
+    } else if (valueKey) {
+      const raw = String(row[valueKey] || "").replace(/[%,$\s,"]/g, "");
+      const val = parseFloat(raw);
+      if (!isNaN(val) && val > 0) rawHoldings.push({ ticker, value: val });
     }
   });
+
+  // If holdings have value (not %) — calculate percentages
+  if (rawHoldings.length > 0 && rawHoldings[0].value !== undefined) {
+    const total = rawHoldings.reduce((s, h) => s + (h.value || 0), 0);
+    if (total <= 0) return [];
+    return rawHoldings
+      .map(h => ({ ticker: h.ticker, allocation: Math.round((h.value / total) * 1000) / 10 }))
+      .filter(h => h.allocation >= 0.1);
+  }
+
+  return rawHoldings;
+}
+
+// For CSVs with metadata rows before the actual header — scan for real header row
+function parseCSVWithSmartHeader(content) {
+  const lines = content.split("\n").filter(l => l.trim());
+
+  // Try to find the line that looks like a column header
+  let headerLine = 0;
+  for (let i = 0; i < Math.min(lines.length, 10); i++) {
+    const lower = lines[i].toLowerCase();
+    if (TICKER_KEYS.some(k => lower.includes(k)) ||
+        ALLOC_KEYS.some(k => lower.includes(k)) ||
+        VALUE_KEYS.some(k => lower.includes(k))) {
+      headerLine = i;
+      break;
+    }
+  }
+
+  const dataContent = lines.slice(headerLine).join("\n");
+  if (!csvParseSync) throw new Error("csv-parse not available");
+  return csvParseSync(dataContent, { columns: true, skip_empty_lines: true, trim: true, relax_quotes: true, relax_column_count: true });
+}
+
+// Extract holdings from PDF text
+function extractFromPDFText(text) {
+  const holdings = [];
+  const seen = new Set();
+
+  // Pattern 1: "AAPL 8.45%" or "VTI 30.2 %" anywhere on a line
+  const pct1 = /\b([A-Z][A-Z0-9]{1,8})\b[^\n]{0,60}?(\d{1,3}(?:\.\d{1,2})?)\s*%/g;
+  for (const m of text.matchAll(pct1)) {
+    const ticker = m[1], pct = parseFloat(m[2]);
+    if (isValidTicker(ticker) && pct > 0 && pct <= 100 && !seen.has(ticker)) {
+      seen.add(ticker);
+      holdings.push({ ticker, allocation: pct });
+    }
+  }
+
+  if (holdings.length > 0) return holdings;
+
+  // Pattern 2: lines like "AAPL  Apple Inc  100  $185  $18500  8.45"
+  // where the last number on a line with a ticker is the %
+  const lines = text.split("\n").map(l => l.trim()).filter(Boolean);
+  lines.forEach(line => {
+    const tickerMatch = line.match(/^([A-Z][A-Z0-9]{1,8})\b/);
+    if (!tickerMatch) return;
+    const ticker = tickerMatch[1];
+    if (!isValidTicker(ticker) || seen.has(ticker)) return;
+    const nums = [...line.matchAll(/\b(\d{1,3}(?:\.\d{1,2})?)\b/g)]
+      .map(m => parseFloat(m[1]))
+      .filter(n => n > 0 && n <= 100);
+    if (nums.length > 0) {
+      seen.add(ticker);
+      holdings.push({ ticker, allocation: nums[nums.length - 1] });
+    }
+  });
+
   return holdings;
+}
+
+// Coordinate-based extraction — three strategies to handle different brokerage layouts.
+function extractFromPDFStructured(pdfData) {
+  const seen = new Set();
+
+  // Collect all text elements with their position
+  const allElements = [];
+  for (let pi = 0; pi < (pdfData.Pages || []).length; pi++) {
+    for (const t of (pdfData.Pages[pi].Texts || [])) {
+      try {
+        const text = decodeURIComponent(t.R.map(r => r.T).join("")).trim();
+        if (text) allElements.push({ page: pi, x: t.x, y: t.y, text });
+      } catch { /* malformed URI encoding */ }
+    }
+  }
+  allElements.sort((a, b) => a.page - b.page || a.y - b.y || a.x - b.x);
+
+  // ── Strategy 1: Row-based (ticker + % on the same horizontal row) ──────────
+  // Handles CSV-style PDF tables: Fidelity, Schwab, Vanguard exports
+  {
+    const holdings = [];
+    const rowMap = new Map();
+    for (const el of allElements) {
+      const key = `${el.page}-${Math.round(el.y * 5)}`; // 0.2-unit Y buckets
+      if (!rowMap.has(key)) rowMap.set(key, []);
+      rowMap.get(key).push(el);
+    }
+    for (const [, cells] of [...rowMap].sort()) {
+      const sorted = cells.sort((a, b) => a.x - b.x);
+      const lineText = sorted.map(c => c.text).join(" ");
+      const pctMatches = [...lineText.matchAll(/(\d{1,3}(?:\.\d{1,2})?)\s*%/g)];
+      if (!pctMatches.length) continue;
+      const pct = parseFloat(pctMatches[pctMatches.length - 1][1]);
+      if (pct <= 0 || pct > 100) continue;
+      const preText = lineText.slice(0, lineText.indexOf(pctMatches[pctMatches.length - 1][0]));
+      for (const candidate of (preText.match(/\b([A-Z][A-Z0-9]{0,8})\b/g) || [])) {
+        if (isValidTicker(candidate) && !seen.has(candidate)) {
+          seen.add(candidate);
+          holdings.push({ ticker: candidate, allocation: pct });
+          break;
+        }
+      }
+    }
+    if (holdings.length > 0) return holdings;
+  }
+
+  // ── Strategy 2: Window-based (ticker and % on separate nearby lines) ────────
+  // Handles "card" layouts where each holding spans multiple lines
+  {
+    const holdings = [];
+    for (let i = 0; i < allElements.length; i++) {
+      const rawTicker = allElements[i].text.replace(/['".,\s]/g, "").toUpperCase();
+      if (!isValidTicker(rawTicker) || seen.has(rawTicker)) continue;
+      for (let j = i + 1; j < Math.min(i + 12, allElements.length); j++) {
+        const m = allElements[j].text.trim().match(/^(\d{1,3}(?:\.\d{1,2})?)\s*%$/);
+        if (m) {
+          const pct = parseFloat(m[1]);
+          if (pct > 0 && pct <= 100) {
+            seen.add(rawTicker);
+            holdings.push({ ticker: rawTicker, allocation: pct });
+            break;
+          }
+        }
+      }
+    }
+    if (holdings.length > 0) return holdings;
+  }
+
+  // ── Strategy 3: "(TICKER)" in security name + Market Value column ──────────
+  // Handles E*TRADE / Morgan Stanley statements where each holding is formatted as
+  // "COMPANY NAME (TICKER)   qty   price   cost   marketValue   gain   income"
+  // No % column exists — we compute % from market values.
+  {
+    // Find the x-position of the "Market Value" column header
+    let mvHeaderX = null;
+    for (const el of allElements) {
+      if (/^market\s*value$/i.test(el.text) && el.x > 25 && el.x < 45) {
+        mvHeaderX = el.x;
+        break;
+      }
+    }
+
+    const rawHoldings = [];
+    for (const el of allElements) {
+      // Match "COMPANY NAME (TICKER)" — ticker is last word in parentheses
+      const m = el.text.match(/\(([A-Z][A-Z0-9'.]{0,9})\)\s*$/);
+      if (!m) continue;
+      // Skip "Gain/(Loss)", "Total/(Deficit)" and other formula-style expressions
+      const parenIdx = el.text.lastIndexOf("(");
+      if (parenIdx > 0 && /[\/\-\+]/.test(el.text[parenIdx - 1])) continue;
+      const ticker = m[1].replace(/['.]/g, "").toUpperCase(); // normalise BRK'B → BRKB
+      if (!isValidTicker(ticker) || seen.has(ticker)) continue;
+
+      // Find the Market Value: a number at the mvHeaderX x-position on the same row
+      const sameRow = allElements.filter(e => e.page === el.page && Math.abs(e.y - el.y) < 0.35);
+      let marketVal = null;
+
+      if (mvHeaderX !== null) {
+        // Look for number closest to the Market Value column header x
+        for (const e of sameRow) {
+          if (Math.abs(e.x - mvHeaderX) < 3) {
+            const n = parseFloat(e.text.replace(/[$,\s]/g, ""));
+            if (!isNaN(n) && n > 0) { marketVal = n; break; }
+          }
+        }
+      }
+
+      // Fallback: take the largest positive number on the row (excluding qty/price)
+      if (marketVal === null) {
+        const nums = sameRow
+          .map(e => parseFloat(e.text.replace(/[$,\s]/g, "")))
+          .filter(n => !isNaN(n) && n > 50); // holdings worth < $50 are noise
+        if (nums.length > 0) marketVal = Math.max(...nums);
+      }
+
+      if (marketVal !== null && marketVal > 0) {
+        seen.add(ticker);
+        rawHoldings.push({ ticker, marketValue: marketVal });
+      }
+    }
+
+    if (rawHoldings.length > 0) {
+      const total = rawHoldings.reduce((s, h) => s + h.marketValue, 0);
+      if (total > 0) {
+        return rawHoldings
+          .map(h => ({ ticker: h.ticker, allocation: Math.round((h.marketValue / total) * 1000) / 10 }))
+          .filter(h => h.allocation >= 0.1)
+          .sort((a, b) => b.allocation - a.allocation);
+      }
+    }
+  }
+
+  // ── Strategy 4: Generic — leftmost-column ticker + Market Value column ──────
+  // Handles Robinhood, TD Ameritrade, Webull, and other ticker-first table layouts.
+  // No (TICKER) pattern needed — works on symbol-in-first-column format.
+  {
+    const mvKeywords = ["market value", "current value", "total value", "mkt value",
+                        "market val", "value", "equity", "amount", "position value"];
+    let mvX = null;
+    for (const el of allElements) {
+      if (mvKeywords.some(k => el.text.toLowerCase().trim() === k) && el.x > 10) {
+        mvX = el.x; break;
+      }
+    }
+
+    const rowMap = new Map();
+    for (const el of allElements) {
+      const key = `${el.page}-${Math.round(el.y * 5)}`;
+      if (!rowMap.has(key)) rowMap.set(key, []);
+      rowMap.get(key).push(el);
+    }
+
+    const rawHoldings = [];
+    for (const [, cells] of [...rowMap].sort()) {
+      const sorted = cells.sort((a, b) => a.x - b.x);
+      if (!sorted.length || sorted[0].x > 5) continue; // ticker must be at far left
+
+      const ticker = sorted[0].text.trim().replace(/['".,]/g, "").toUpperCase();
+      if (!isValidTicker(ticker) || seen.has(ticker)) continue;
+
+      let mv = null;
+      if (mvX !== null) {
+        for (const el of sorted) {
+          if (Math.abs(el.x - mvX) < 3) {
+            const n = parseFloat(el.text.replace(/[$,\s]/g, ""));
+            if (!isNaN(n) && n > 0) { mv = n; break; }
+          }
+        }
+      }
+      // No header found — use the largest dollar amount on the row (> $50)
+      if (mv === null) {
+        const nums = sorted.map(e => parseFloat(e.text.replace(/[$,\s]/g, ""))).filter(n => !isNaN(n) && n > 50);
+        if (nums.length) mv = Math.max(...nums);
+      }
+
+      if (mv && mv > 0) { seen.add(ticker); rawHoldings.push({ ticker, marketValue: mv }); }
+    }
+
+    if (rawHoldings.length >= 2) {
+      const total = rawHoldings.reduce((s, h) => s + h.marketValue, 0);
+      if (total > 0) {
+        return rawHoldings
+          .map(h => ({ ticker: h.ticker, allocation: Math.round((h.marketValue / total) * 1000) / 10 }))
+          .filter(h => h.allocation >= 0.1)
+          .sort((a, b) => b.allocation - a.allocation);
+      }
+    }
+  }
+
+  return [];
 }
 
 app.post("/api/parse-portfolio", upload.single("file"), (req, res) => {
   if (!req.file) return res.status(400).json({ error: "No file uploaded" });
 
   const filePath = req.file.path;
+  const mime = req.file.mimetype || "";
   const originalName = req.file.originalname.toLowerCase();
+  const cleanup = () => { try { fs.unlinkSync(filePath); } catch {} };
 
   try {
-    // Image files — require AI vision
-    if (req.file.mimetype.startsWith("image/") || originalName.endsWith(".jpg") || originalName.endsWith(".jpeg") || originalName.endsWith(".png")) {
-      fs.unlinkSync(filePath);
+    // Images — require AI vision
+    if (mime.startsWith("image/") || /\.(jpg|jpeg|png|webp|gif)$/.test(originalName)) {
+      cleanup();
       return res.json({ requiresAI: true });
     }
 
     // CSV
     if (originalName.endsWith(".csv")) {
-      const content = fs.readFileSync(filePath, "utf8");
-      const rows = csvParse(content, { columns: true, skip_empty_lines: true, trim: true });
-      fs.unlinkSync(filePath);
-      const holdings = normaliseHoldings(rows);
-      return res.json({ holdings });
+      // Read as buffer first to strip BOM and detect encoding
+      const buf = fs.readFileSync(filePath);
+      // Strip UTF-8 BOM (0xEF 0xBB 0xBF) if present
+      const content = buf[0] === 0xEF && buf[1] === 0xBB && buf[2] === 0xBF
+        ? buf.slice(3).toString("utf8")
+        : buf.toString("utf8");
+      cleanup();
+      try {
+        const rows = parseCSVWithSmartHeader(content);
+        const holdings = normaliseHoldings(rows);
+        return res.json({ holdings });
+      } catch (e) {
+        return res.json({ holdings: [], error: "CSV parse error: " + e.message });
+      }
     }
 
     // Excel
     if (originalName.endsWith(".xlsx") || originalName.endsWith(".xls")) {
       const wb = xlsx.readFile(filePath);
-      const ws = wb.Sheets[wb.SheetNames[0]];
-      const rows = xlsx.utils.sheet_to_json(ws, { defval: "" });
-      fs.unlinkSync(filePath);
-      const holdings = normaliseHoldings(rows);
-      return res.json({ holdings });
+      cleanup();
+      // Try each sheet, return first one with valid holdings
+      for (const sheetName of wb.SheetNames) {
+        const ws = wb.Sheets[sheetName];
+        const rows = xlsx.utils.sheet_to_json(ws, { defval: "", raw: false });
+        if (rows.length === 0) continue;
+        const holdings = normaliseHoldings(rows);
+        if (holdings.length > 0) return res.json({ holdings });
+      }
+      return res.json({ holdings: [], error: "No recognisable holdings found in this Excel file. Try CSV export." });
     }
 
-    // PDF — basic text extraction
+    // PDF
     if (originalName.endsWith(".pdf")) {
-      // Dynamic require to avoid startup errors if pdf-parse not needed
-      const pdfParse = require("pdf-parse");
-      const buffer = fs.readFileSync(filePath);
-      pdfParse(buffer).then((data) => {
-        fs.unlinkSync(filePath);
-        const text = data.text;
-        const lines = text.split("\n").map((l) => l.trim()).filter(Boolean);
-        const holdings = [];
-        const tickerPattern = /\b([A-Z]{2,6})\b/g;
-        const numPattern = /\b(\d{1,3}(?:\.\d+)?)\s*%?\b/g;
-        lines.forEach((line) => {
-          const tickers = [...line.matchAll(tickerPattern)].map((m) => m[1]);
-          const nums = [...line.matchAll(numPattern)]
-            .map((m) => parseFloat(m[1]))
-            .filter((n) => n > 0 && n <= 100);
-          if (tickers.length === 1 && nums.length >= 1) {
-            holdings.push({ ticker: tickers[0], allocation: nums[0] });
-          }
-        });
-        if (holdings.length > 0) {
-          res.json({ holdings });
-        } else {
-          res.json({ holdings: [], error: "Could not extract structured data from this PDF. Try exporting as CSV from your broker." });
+      if (!PDFParser) {
+        cleanup();
+        return res.json({ holdings: [], error: "PDF parsing unavailable — please export as CSV from your brokerage." });
+      }
+      const pdfParser = new PDFParser(null, 1);
+      pdfParser.on("pdfParser_dataReady", (data) => {
+        cleanup();
+        // Try coordinate-based extraction first (handles multi-column table layouts)
+        let holdings = extractFromPDFStructured(data);
+        // Fallback: linear text extraction
+        if (holdings.length === 0) {
+          try {
+            const text = decodeURIComponent(
+              (data.Pages || []).flatMap(p => (p.Texts || []).map(t => t.R.map(r => r.T).join(" "))).join("\n")
+            );
+            holdings = extractFromPDFText(text);
+          } catch { /* ignore */ }
         }
-      }).catch(() => {
-        fs.unlinkSync(filePath);
-        res.json({ holdings: [], error: "PDF parsing failed. Please export as CSV." });
+        if (holdings.length > 0) return res.json({ holdings });
+        res.json({ holdings: [], error: "Couldn't extract holdings from this PDF. Export as CSV from your brokerage for reliable results." });
       });
+      pdfParser.on("pdfParser_dataError", () => {
+        cleanup();
+        res.json({ holdings: [], error: "PDF could not be read — please export as CSV from your brokerage." });
+      });
+      pdfParser.loadPDF(filePath);
       return;
     }
 
-    fs.unlinkSync(filePath);
-    res.json({ holdings: [], error: "Unsupported file format." });
+    cleanup();
+    res.json({ holdings: [], error: "Unsupported file type." });
+
   } catch (err) {
-    try { fs.unlinkSync(filePath); } catch {}
-    res.status(500).json({ error: "File processing failed: " + err.message });
+    cleanup();
+    res.status(500).json({ error: "Processing failed: " + err.message });
   }
 });
 
@@ -577,6 +981,32 @@ app.post("/api/assess", (req, res) => {
   const { holdings } = req.body;
   if (!holdings?.length) return res.status(400).json({ error: "Holdings required" });
   setTimeout(() => res.json(assessPortfolio(holdings)), 1500);
+});
+
+// Debug PDF text extraction (temporary — for diagnosing parse failures)
+app.post("/api/debug-pdf", upload.single("file"), (req, res) => {
+  if (!req.file) return res.status(400).json({ error: "No file" });
+  if (!PDFParser) return res.status(500).json({ error: "pdf2json not available" });
+  const pdfParser = new PDFParser(null, 1);
+  pdfParser.on("pdfParser_dataReady", (data) => {
+    try { fs.unlinkSync(req.file.path); } catch {}
+    const elements = [];
+    for (let pi = 0; pi < (data.Pages || []).length; pi++) {
+      for (const t of (data.Pages[pi].Texts || [])) {
+        try {
+          const text = decodeURIComponent(t.R.map(r => r.T).join("")).trim();
+          if (text) elements.push({ page: pi, x: Math.round(t.x * 10) / 10, y: Math.round(t.y * 10) / 10, text });
+        } catch { elements.push({ page: pi, x: t.x, y: t.y, text: "[decode error]" }); }
+      }
+    }
+    const textDump = elements.map(e => `[p${e.page} y=${e.y} x=${e.x}] ${e.text}`).join("\n");
+    res.json({ totalElements: elements.length, textDump: textDump.slice(0, 8000) });
+  });
+  pdfParser.on("pdfParser_dataError", (e) => {
+    try { fs.unlinkSync(req.file.path); } catch {}
+    res.json({ error: "PDF error", detail: String(e.parserError) });
+  });
+  pdfParser.loadPDF(req.file.path);
 });
 
 // View all submissions (admin)

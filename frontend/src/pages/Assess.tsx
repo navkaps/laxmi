@@ -69,10 +69,10 @@ const Assess: React.FC = () => {
       } else if (res.data.holdings?.length > 0) {
         setParsedHoldings(res.data.holdings);
       } else {
-        setParseError("no_data");
+        setParseError(res.data.error || "No structured data found in this file.");
       }
     } catch {
-      setParseError("error");
+      setParseError("Could not connect to the server. Please check your connection and try again.");
     } finally {
       setParsing(false);
     }
@@ -366,7 +366,11 @@ const Assess: React.FC = () => {
                       <div>
                         <div className="font-sans text-sm text-cream-100">{file?.name}</div>
                         <div className="font-sans text-xs text-cream-200/30 mt-0.5">
-                          {parsedHoldings.length > 0 ? `${parsedHoldings.length} holdings extracted` : "No structured data found"}
+                          {parsedHoldings.length > 0
+                            ? `${parsedHoldings.length} holdings extracted`
+                            : parseError === "ai_required"
+                              ? "Image parsing requires AI"
+                              : "No holdings extracted"}
                         </div>
                       </div>
                     </div>
@@ -375,6 +379,31 @@ const Assess: React.FC = () => {
                       Remove
                     </button>
                   </div>
+
+                  {/* Parse error guidance */}
+                  {parseError && parseError !== "ai_required" && (
+                    <motion.div
+                      initial={{ opacity: 0, y: 8 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      className="border border-white/8 bg-navy-800/20 px-6 py-6 mb-8"
+                    >
+                      <p className="font-sans text-sm text-cream-200/55 mb-5 leading-relaxed">{parseError}</p>
+                      <p className="label-overline opacity-25 mb-4">Export as CSV for reliable parsing</p>
+                      <div className="grid grid-cols-2 gap-2">
+                        {[
+                          { name: "Fidelity", path: "Accounts → Positions → Download (CSV)" },
+                          { name: "Schwab", path: "Accounts → Holdings → Export" },
+                          { name: "Robinhood", path: "Account → Investing → Export" },
+                          { name: "Vanguard", path: "My Accounts → Positions → Download" },
+                        ].map((b) => (
+                          <div key={b.name} className="border border-white/5 px-4 py-3.5">
+                            <p className="font-sans text-xs font-medium text-cream-100 mb-0.5">{b.name}</p>
+                            <p className="font-sans text-xs text-cream-200/28 leading-relaxed">{b.path}</p>
+                          </div>
+                        ))}
+                      </div>
+                    </motion.div>
+                  )}
 
                   {/* AI required */}
                   {parseError === "ai_required" && (

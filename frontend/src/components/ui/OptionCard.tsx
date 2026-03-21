@@ -9,48 +9,51 @@ interface OptionCardProps {
   multi?: boolean;
 }
 
-const OptionCard: React.FC<OptionCardProps> = ({
-  label,
-  description,
-  selected,
-  onClick,
-  multi = false,
-}) => {
+const OptionCard: React.FC<OptionCardProps> = ({ label, description, selected, onClick, multi = false }) => {
   return (
     <motion.button
-      whileHover={{ y: -2 }}
-      whileTap={{ scale: 0.98 }}
+      whileTap={{ scale: 0.99 }}
       onClick={onClick}
-      className={`w-full text-left p-5 border transition-all duration-200 group ${
+      className={`w-full text-left px-6 py-5 transition-all duration-200 group relative overflow-hidden ${
         selected
-          ? "border-gold-500 bg-gold-500/8"
-          : "border-white/8 bg-navy-800/50 hover:border-white/20"
+          ? "bg-gold-500/10 border border-gold-500/40"
+          : "bg-white/3 border border-white/6 hover:bg-white/5 hover:border-white/12"
       }`}
     >
-      <div className="flex items-start gap-4">
-        <div
-          className={`mt-0.5 flex-shrink-0 transition-all duration-200 ${
-            multi ? "w-4 h-4 border" : "w-4 h-4 rounded-full border"
-          } ${
-            selected ? "border-gold-500 bg-gold-500" : "border-white/20"
-          } flex items-center justify-center`}
-        >
+      {/* Selected glow */}
+      {selected && (
+        <motion.div
+          layoutId={multi ? undefined : "card-glow"}
+          className="absolute inset-0 bg-gradient-to-r from-gold-500/8 to-transparent pointer-events-none"
+        />
+      )}
+
+      <div className="relative flex items-start gap-4">
+        {/* Indicator */}
+        <div className={`flex-shrink-0 mt-0.5 transition-all duration-200 ${
+          multi
+            ? `w-4 h-4 border flex items-center justify-center ${selected ? "border-gold-500 bg-gold-500" : "border-white/20"}`
+            : `w-4 h-4 rounded-full border flex items-center justify-center ${selected ? "border-gold-500" : "border-white/20"}`
+        }`}>
           {selected && (
-            <div className={`bg-navy-900 ${multi ? "w-2 h-2" : "w-1.5 h-1.5 rounded-full"}`} />
+            multi
+              ? <svg width="8" height="6" viewBox="0 0 8 6" fill="none"><path d="M1 3l2 2 4-4" stroke="#0C1426" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
+              : <div className="w-1.5 h-1.5 rounded-full bg-gold-500" />
           )}
         </div>
-        <div>
-          <div className={`font-sans text-sm font-medium transition-colors duration-200 ${
-            selected ? "text-cream-50" : "text-cream-100/70 group-hover:text-cream-100"
+
+        <div className="min-w-0">
+          <p className={`font-sans text-sm transition-colors duration-200 leading-snug ${
+            selected ? "text-cream-50 font-medium" : "text-cream-200/60 font-normal group-hover:text-cream-200/80"
           }`}>
             {label}
-          </div>
+          </p>
           {description && (
-            <div className={`mt-1 font-sans text-xs font-light transition-colors duration-200 ${
-              selected ? "text-cream-200/60" : "text-cream-200/40"
+            <p className={`mt-1 font-sans text-xs leading-relaxed transition-colors duration-200 ${
+              selected ? "text-cream-200/45" : "text-cream-200/28 group-hover:text-cream-200/38"
             }`}>
               {description}
-            </div>
+            </p>
           )}
         </div>
       </div>
