@@ -1,0 +1,94 @@
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&family=DM+Serif+Display:ital@0;1&family=Inter:wght@300;400;500;600&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  * {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    @apply bg-navy-950 text-cream-100;
+    font-family: 'Inter', system-ui, sans-serif;
+  }
+
+  ::selection {
+    @apply bg-gold-500 text-navy-900;
+  }
+
+  ::-webkit-scrollbar {
+    width: 4px;
+  }
+
+  ::-webkit-scrollbar-track {
+    @apply bg-navy-900;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    @apply bg-gold-600 rounded-full;
+  }
+}
+
+@layer components {
+  .btn-primary {
+    @apply bg-gold-500 text-navy-900 font-sans font-medium px-8 py-4 tracking-widest text-xs uppercase transition-all duration-300 hover:bg-gold-400 active:scale-95;
+  }
+
+  .btn-ghost {
+    @apply border border-gold-500/40 text-gold-400 font-sans font-normal px-8 py-4 tracking-widest text-xs uppercase transition-all duration-300 hover:border-gold-400 hover:text-gold-300;
+  }
+
+  .card-dark {
+    @apply bg-navy-800 border border-white/5 p-8;
+  }
+
+  .label-overline {
+    @apply text-gold-500 text-xs tracking-widest uppercase font-sans font-medium;
+  }
+
+  .heading-display {
+    @apply font-display text-cream-50 leading-tight;
+  }
+}
+
+/* Custom range slider */
+input[type='range'] {
+  -webkit-appearance: none;
+  appearance: none;
+  background: transparent;
+  cursor: pointer;
+  width: 100%;
+}
+
+input[type='range']::-webkit-slider-track {
+  background: rgba(201, 169, 110, 0.2);
+  height: 2px;
+  border-radius: 0;
+}
+
+input[type='range']::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  background: #C9A96E;
+  height: 18px;
+  width: 18px;
+  border-radius: 50%;
+  margin-top: -8px;
+  box-shadow: 0 0 0 3px rgba(201, 169, 110, 0.15);
+  transition: box-shadow 0.2s;
+}
+
+input[type='range']::-webkit-slider-thumb:hover {
+  box-shadow: 0 0 0 6px rgba(201, 169, 110, 0.2);
+}
+
+input[type='range']:focus {
+  outline: none;
+}
