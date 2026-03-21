@@ -92,3 +92,20 @@ input[type='range']::-webkit-slider-thumb:hover {
 input[type='range']:focus {
   outline: none;
 }
+
+/* Print / PDF report styles */
+@media print {
+  body { background: white !important; color: #111 !important; }
+  .no-print { display: none !important; }
+  nav, .fixed { display: none !important; }
+  .print-page { page-break-after: always; }
+  .bg-navy-950, .bg-navy-800\/50, .bg-navy-800\/30, .bg-navy-800\/40 {
+    background: white !important;
+    border-color: #e5e7eb !important;
+  }
+  .text-cream-50, .text-cream-100 { color: #111 !important; }
+  .text-cream-200\/55, .text-cream-200\/40, .text-cream-200\/35, .text-cream-200\/60 { color: #444 !important; }
+  .text-gold-400, .text-gold-500 { color: #92651a !important; }
+  .label-overline { color: #92651a !important; }
+  .border-white\/5 { border-color: #e5e7eb !important; }
+}

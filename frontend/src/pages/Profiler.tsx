@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { questions } from "../data/questions";
+import { questions, ACCOUNT_TYPE_OPTIONS, getCurrencyConfig } from "../data/questions";
 import { UserProfile } from "../types";
 import OptionCard from "../components/ui/OptionCard";
 import SliderInput from "../components/ui/SliderInput";
@@ -16,8 +16,73 @@ const Profiler: React.FC = () => {
   const [otherText, setOtherText] = useState<Record<string, string>>({});
   const [direction, setDirection] = useState(1);
 
-  const question = questions[current];
-  const progress = (current / questions.length) * 100;
+  const country = userInfo?.country || "US";
+  const currency = getCurrencyConfig(country);
+
+  // Inject country-specific options and localised currency into questions
+  const localQuestions = questions.map((q) => {
+    if (q.id === "account_type") {
+      return { ...q, options: ACCOUNT_TYPE_OPTIONS[country] || ACCOUNT_TYPE_OPTIONS["OTHER"] };
+    }
+    if ((q.id === "initial_amount" || q.id === "monthly_contribution" || q.id === "target_value") && q.sliderConfig) {
+      const f = currency.factor;
+      const sym = currency.symbol;
+      if (q.id === "initial_amount") {
+        return {
+          ...q, sliderConfig: {
+            ...q.sliderConfig,
+            min: Math.round(5000 * f),
+            max: Math.round(10000000 * f),
+            step: Math.round(5000 * f),
+            minLabel: `${sym}${(5000 * f).toLocaleString()}`,
+            maxLabel: `${sym}10M+`,
+            formatValue: (v: number) => {
+              const m = 1000000 * f;
+              if (v >= m * 10) return `${sym}10M+`;
+              if (v >= m) return `${sym}${(v / m).toFixed(1)}M`;
+              return `${sym}${Math.round(v / (1000 * f))}K`;
+            },
+          },
+        };
+      }
+      if (q.id === "monthly_contribution") {
+        return {
+          ...q, sliderConfig: {
+            ...q.sliderConfig,
+            min: 0,
+            max: Math.round(20000 * f),
+            step: Math.round(250 * f),
+            minLabel: `${sym}0`,
+            maxLabel: `${sym}${(20000 * f).toLocaleString()}`,
+            formatValue: (v: number) =>
+              v === 0 ? "No monthly addition" : `${sym}${Math.round(v).toLocaleString()} / month`,
+          },
+        };
+      }
+      if (q.id === "target_value") {
+        return {
+          ...q, sliderConfig: {
+            ...q.sliderConfig,
+            min: Math.round(100000 * f),
+            max: Math.round(10000000 * f),
+            step: Math.round(50000 * f),
+            minLabel: `${sym}${(100000 * f / 1000).toFixed(0)}K`,
+            maxLabel: `${sym}10M+`,
+            formatValue: (v: number) => {
+              const m = 1000000 * f;
+              if (v >= m * 10) return `${sym}10M+`;
+              if (v >= m) return `${sym}${(v / m).toFixed(1)}M`;
+              return `${sym}${(v / (1000 * f)).toFixed(0)}K`;
+            },
+          },
+        };
+      }
+    }
+    return q;
+  });
+
+  const question = localQuestions[current];
+  const progress = (current / localQuestions.length) * 100;
   const answer = profile[question.id];
 
   const isAnswered = (): boolean => {
@@ -52,7 +117,7 @@ const Profiler: React.FC = () => {
     if (answer === "other" && otherText[question.id]) {
       setProfile((p) => ({ ...p, [question.id]: `other:${otherText[question.id]}` }));
     }
-    if (current < questions.length - 1) {
+    if (current < localQuestions.length - 1) {
       setDirection(1);
       setCurrent((c) => c + 1);
     } else {
@@ -98,7 +163,7 @@ const Profiler: React.FC = () => {
       {/* Step counter */}
       <div className="fixed top-6 right-10 z-50">
         <span className="label-overline opacity-30">
-          {current + 1} / {questions.length}
+          {current + 1} / {localQuestions.length}
         </span>
       </div>
 
@@ -247,7 +312,7 @@ const Profiler: React.FC = () => {
               disabled={!isAnswered()}
               className="btn-primary disabled:opacity-25 disabled:cursor-not-allowed"
             >
-              {current === questions.length - 1 ? "Build my portfolio →" : "Continue →"}
+              {current === localQuestions.length - 1 ? "Build my portfolio →" : "Continue →"}
             </button>
           </div>
         </div>

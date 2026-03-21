@@ -5,3 +5,4 @@ backend/.env
 .env
 frontend/build/
 .DS_Store
+backend/uploads/

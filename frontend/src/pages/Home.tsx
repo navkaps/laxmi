@@ -121,10 +121,13 @@ const Home: React.FC = () => {
             onClick={() => navigate("/start")}
             className="btn-primary"
           >
-            Begin your profile
+            Build my portfolio
           </button>
-          <button className="btn-ghost">
-            How it works
+          <button
+            onClick={() => navigate("/assess")}
+            className="btn-ghost"
+          >
+            Assess existing portfolio
           </button>
         </motion.div>
       </div>

@@ -5,6 +5,7 @@ import Home from "./pages/Home";
 import UserInfoPage from "./pages/UserInfo";
 import Profiler from "./pages/Profiler";
 import Results from "./pages/Results";
+import Assess from "./pages/Assess";
 
 function App() {
   return (
@@ -14,6 +15,7 @@ function App() {
         <Route path="/start" element={<UserInfoPage />} />
         <Route path="/profile" element={<Profiler />} />
         <Route path="/results" element={<><Navbar /><Results /></>} />
+        <Route path="/assess" element={<><Navbar /><Assess /></>} />
       </Routes>
     </Router>
   );

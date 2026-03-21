@@ -2,6 +2,12 @@ const express = require("express");
 const cors = require("cors");
 const Database = require("better-sqlite3");
 const path = require("path");
+const multer = require("multer");
+const xlsx = require("xlsx");
+const { parse: csvParse } = require("csv-parse/sync");
+const fs = require("fs");
+
+const upload = multer({ dest: path.join(__dirname, "uploads/"), limits: { fileSize: 20 * 1024 * 1024 } });
 
 const app = express();
 app.use(cors({ origin: "http://localhost:3000" }));
@@ -344,6 +350,233 @@ app.post("/api/recommend", (req, res) => {
 
     res.json(recommendation);
   }, 3000);
+});
+
+// ─── Portfolio assessment ────────────────────────────────────────────────────────
+const TICKER_SECTORS = {
+  // US Broad Market ETFs
+  VTI: "Broad US Equity", VXUS: "International Equity", QQQ: "Technology / Nasdaq",
+  SPY: "Broad US Equity", IVV: "Broad US Equity", VOO: "Broad US Equity",
+  // Bonds
+  BND: "Fixed Income", AGG: "Fixed Income", TLT: "Long-Term Bonds",
+  SCHP: "Inflation-Protected Bonds", VCIT: "Corporate Bonds", LQD: "Corporate Bonds",
+  // Sectors
+  VGT: "Technology", XLK: "Technology", ARKK: "Disruptive Innovation",
+  VHT: "Healthcare", XLV: "Healthcare", XLE: "Energy", XLF: "Financials",
+  VNQ: "Real Estate", O: "Real Estate", AMT: "Real Estate",
+  VYM: "Dividend Equities", SCHD: "Dividend Equities", HDV: "Dividend Equities",
+  GOLDBEES: "Gold", GLD: "Gold", IAU: "Gold",
+  // US Stocks
+  AAPL: "Technology", MSFT: "Technology", NVDA: "Semiconductors",
+  AMZN: "Technology / E-Commerce", META: "Technology", GOOGL: "Technology",
+  GOOG: "Technology", TSLA: "Consumer / EV", BRK: "Financials",
+  JPM: "Financials", JNJ: "Healthcare", UNH: "Healthcare",
+  // India ETFs
+  NIFTYBEES: "Large Cap India Equity", JUNIORBEES: "Large-Mid Cap India Equity",
+  MIDFTY: "Mid Cap India Equity", BANKBEES: "India Banking",
+  LIQUIDBEES: "Liquid / Money Market", GILT: "India Government Bonds",
+  ICICIB22: "India Corporate Bonds", MAFSETF90: "India ESG Equity",
+  // India Stocks
+  RELIANCE: "Energy / Retail / Digital", TCS: "IT Services",
+  HDFCBANK: "Banking", INFOSYS: "IT Services", WIPRO: "IT Services",
+};
+
+function assessPortfolio(holdings) {
+  const total = holdings.reduce((s, h) => s + h.allocation, 0);
+
+  // Sector breakdown
+  const sectorMap = {};
+  holdings.forEach((h) => {
+    const sector = TICKER_SECTORS[h.ticker.toUpperCase()] || "Other";
+    sectorMap[sector] = (sectorMap[sector] || 0) + (h.allocation / total) * 100;
+  });
+  const sectorBreakdown = Object.entries(sectorMap)
+    .map(([sector, weight]) => ({ sector, weight: Math.round(weight) }))
+    .sort((a, b) => b.weight - a.weight);
+
+  // Scoring
+  let score = 60;
+  const numHoldings = holdings.length;
+  const techWeight = (sectorMap["Technology"] || 0) + (sectorMap["Technology / Nasdaq"] || 0) + (sectorMap["Semiconductors"] || 0) + (sectorMap["Disruptive Innovation"] || 0);
+  const fixedIncomeWeight = (sectorMap["Fixed Income"] || 0) + (sectorMap["Long-Term Bonds"] || 0) + (sectorMap["Corporate Bonds"] || 0) + (sectorMap["Inflation-Protected Bonds"] || 0);
+  const intlWeight = sectorMap["International Equity"] || 0;
+  const goldWeight = sectorMap["Gold"] || 0;
+  const largestPosition = Math.max(...holdings.map((h) => (h.allocation / total) * 100));
+
+  if (numHoldings >= 5) score += 10;
+  if (numHoldings >= 8) score += 5;
+  if (intlWeight > 10) score += 8;
+  if (fixedIncomeWeight > 10) score += 7;
+  if (goldWeight >= 3 && goldWeight <= 15) score += 5;
+  if (largestPosition > 40) score -= 15;
+  if (largestPosition > 25) score -= 8;
+  if (techWeight > 50) score -= 12;
+  if (techWeight > 35) score -= 5;
+  if (numHoldings < 3) score -= 10;
+  score = Math.max(10, Math.min(98, score));
+
+  // Risk profile
+  const equityWeight = 100 - fixedIncomeWeight - (sectorMap["Liquid / Money Market"] || 0) - goldWeight;
+  const riskProfile =
+    equityWeight > 85 ? "Aggressive" :
+    equityWeight > 65 ? "Moderate–Aggressive" :
+    equityWeight > 45 ? "Moderate" :
+    equityWeight > 25 ? "Conservative" : "Very Conservative";
+
+  // Strengths
+  const strengths = [];
+  if (numHoldings >= 5) strengths.push(`Good diversification with ${numHoldings} distinct positions reduces single-security risk.`);
+  if (fixedIncomeWeight > 10) strengths.push(`${Math.round(fixedIncomeWeight)}% fixed income allocation provides downside cushion and income stability.`);
+  if (intlWeight > 10) strengths.push(`International exposure (${Math.round(intlWeight)}%) reduces concentration in any single economy.`);
+  if (goldWeight >= 3) strengths.push(`Gold allocation (${Math.round(goldWeight)}%) acts as a store of value and hedge against equity drawdowns.`);
+  if (techWeight >= 10 && techWeight <= 35) strengths.push("Technology exposure is meaningful without becoming a concentration risk.");
+  if (strengths.length === 0) strengths.push("The portfolio holds real assets with long-term compounding potential.");
+
+  // Risks
+  const risks = [];
+  if (largestPosition > 30) risks.push(`Largest single position represents ${Math.round(largestPosition)}% of the portfolio — a single bad outcome has outsized impact.`);
+  if (techWeight > 40) risks.push(`Technology concentration (${Math.round(techWeight)}%) exposes the portfolio to sector-specific regulatory, valuation, or cycle risk.`);
+  if (intlWeight < 10) risks.push("No meaningful international diversification — the portfolio is highly sensitive to US-specific market events.");
+  if (fixedIncomeWeight < 5 && equityWeight > 80) risks.push("Near-zero fixed income means the portfolio could drawdown 35–50% in a severe bear market with no cushion.");
+  if (numHoldings < 4) risks.push("Fewer than 4 holdings — highly concentrated. A single holding failure could materially impair the portfolio.");
+  if (risks.length === 0) risks.push("Low obvious structural risks detected — focus on maintaining disciplined rebalancing.");
+
+  // Suggestions
+  const suggestions = [];
+  if (intlWeight < 10) suggestions.push({ action: "Add international diversification", detail: "Consider allocating 10–20% to VXUS (Vanguard Total International) or equivalent to reduce US-only exposure." });
+  if (techWeight > 40) suggestions.push({ action: "Reduce technology concentration", detail: `At ${Math.round(techWeight)}% technology, consider trimming and redeploying into sectors like healthcare, financials, or consumer staples.` });
+  if (fixedIncomeWeight < 5 && equityWeight > 75) suggestions.push({ action: "Introduce a fixed income buffer", detail: "Even a 10–15% allocation to BND or AGG would meaningfully reduce portfolio volatility without sacrificing long-term return." });
+  if (largestPosition > 25) suggestions.push({ action: "Reduce largest position", detail: `The ${holdings.find(h => (h.allocation / total) * 100 === largestPosition)?.ticker} position is too large. Consider trimming to below 20% and diversifying the proceeds.` });
+  if (numHoldings < 4) suggestions.push({ action: "Increase number of holdings", detail: "Expanding to 6–10 holdings would dramatically improve diversification without meaningful added complexity." });
+  if (suggestions.length === 0) suggestions.push({ action: "Maintain regular rebalancing", detail: "Your portfolio is reasonably structured. Review annually and rebalance if any position drifts more than 5% from target." });
+
+  const verdict =
+    score >= 80 ? "A well-constructed portfolio with thoughtful diversification. Minor adjustments could improve efficiency, but the core structure is sound."
+    : score >= 60 ? "A reasonable portfolio with clear strengths, but some structural improvements would meaningfully reduce risk and improve long-term outcomes."
+    : "This portfolio has meaningful concentration risks that should be addressed. Restructuring around the suggestions above would lead to better risk-adjusted returns.";
+
+  return { overallRisk: riskProfile, score, summary: `Your ${numHoldings}-position portfolio has a ${riskProfile.toLowerCase()} risk profile with ${Math.round(equityWeight)}% equity exposure. ${score >= 70 ? "The overall structure is solid with room for refinement." : "There are some concentration and diversification issues worth addressing."}`, strengths, risks, sectorBreakdown, suggestions, verdict };
+}
+
+// ─── Portfolio file parser ───────────────────────────────────────────────────────
+function normaliseHoldings(rows) {
+  // Try to find ticker and allocation columns
+  const holdings = [];
+  rows.forEach((row) => {
+    const vals = Object.values(row).map((v) => String(v || "").trim());
+    const keys = Object.keys(row).map((k) => k.toLowerCase());
+
+    let ticker = null;
+    let allocation = null;
+
+    // Ticker column heuristics
+    const tickerIdx = keys.findIndex((k) =>
+      k.includes("ticker") || k.includes("symbol") || k.includes("stock") || k === "security"
+    );
+    if (tickerIdx >= 0) ticker = vals[tickerIdx];
+
+    // Allocation column heuristics
+    const allocIdx = keys.findIndex((k) =>
+      k.includes("alloc") || k.includes("weight") || k.includes("percent") || k.includes("%") || k.includes("portion")
+    );
+    if (allocIdx >= 0) {
+      allocation = parseFloat(String(vals[allocIdx]).replace(/[%,]/g, ""));
+    }
+
+    // Fallback: scan all values for ticker-like strings
+    if (!ticker) {
+      const tickerVal = vals.find((v) => /^[A-Z]{2,6}$/.test(v));
+      if (tickerVal) ticker = tickerVal;
+    }
+    if (!allocation) {
+      const numVal = vals.find((v) => /^\d{1,3}(\.\d+)?$/.test(v) && parseFloat(v) <= 100);
+      if (numVal) allocation = parseFloat(numVal);
+    }
+
+    if (ticker && allocation && allocation > 0) {
+      holdings.push({ ticker: ticker.toUpperCase(), allocation });
+    }
+  });
+  return holdings;
+}
+
+app.post("/api/parse-portfolio", upload.single("file"), (req, res) => {
+  if (!req.file) return res.status(400).json({ error: "No file uploaded" });
+
+  const filePath = req.file.path;
+  const originalName = req.file.originalname.toLowerCase();
+
+  try {
+    // Image files — require AI vision
+    if (req.file.mimetype.startsWith("image/") || originalName.endsWith(".jpg") || originalName.endsWith(".jpeg") || originalName.endsWith(".png")) {
+      fs.unlinkSync(filePath);
+      return res.json({ requiresAI: true });
+    }
+
+    // CSV
+    if (originalName.endsWith(".csv")) {
+      const content = fs.readFileSync(filePath, "utf8");
+      const rows = csvParse(content, { columns: true, skip_empty_lines: true, trim: true });
+      fs.unlinkSync(filePath);
+      const holdings = normaliseHoldings(rows);
+      return res.json({ holdings });
+    }
+
+    // Excel
+    if (originalName.endsWith(".xlsx") || originalName.endsWith(".xls")) {
+      const wb = xlsx.readFile(filePath);
+      const ws = wb.Sheets[wb.SheetNames[0]];
+      const rows = xlsx.utils.sheet_to_json(ws, { defval: "" });
+      fs.unlinkSync(filePath);
+      const holdings = normaliseHoldings(rows);
+      return res.json({ holdings });
+    }
+
+    // PDF — basic text extraction
+    if (originalName.endsWith(".pdf")) {
+      // Dynamic require to avoid startup errors if pdf-parse not needed
+      const pdfParse = require("pdf-parse");
+      const buffer = fs.readFileSync(filePath);
+      pdfParse(buffer).then((data) => {
+        fs.unlinkSync(filePath);
+        const text = data.text;
+        const lines = text.split("\n").map((l) => l.trim()).filter(Boolean);
+        const holdings = [];
+        const tickerPattern = /\b([A-Z]{2,6})\b/g;
+        const numPattern = /\b(\d{1,3}(?:\.\d+)?)\s*%?\b/g;
+        lines.forEach((line) => {
+          const tickers = [...line.matchAll(tickerPattern)].map((m) => m[1]);
+          const nums = [...line.matchAll(numPattern)]
+            .map((m) => parseFloat(m[1]))
+            .filter((n) => n > 0 && n <= 100);
+          if (tickers.length === 1 && nums.length >= 1) {
+            holdings.push({ ticker: tickers[0], allocation: nums[0] });
+          }
+        });
+        if (holdings.length > 0) {
+          res.json({ holdings });
+        } else {
+          res.json({ holdings: [], error: "Could not extract structured data from this PDF. Try exporting as CSV from your broker." });
+        }
+      }).catch(() => {
+        fs.unlinkSync(filePath);
+        res.json({ holdings: [], error: "PDF parsing failed. Please export as CSV." });
+      });
+      return;
+    }
+
+    fs.unlinkSync(filePath);
+    res.json({ holdings: [], error: "Unsupported file format." });
+  } catch (err) {
+    try { fs.unlinkSync(filePath); } catch {}
+    res.status(500).json({ error: "File processing failed: " + err.message });
+  }
+});
+
+app.post("/api/assess", (req, res) => {
+  const { holdings } = req.body;
+  if (!holdings?.length) return res.status(400).json({ error: "Holdings required" });
+  setTimeout(() => res.json(assessPortfolio(holdings)), 1500);
 });
 
 // View all submissions (admin)

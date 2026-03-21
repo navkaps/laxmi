@@ -1,4 +1,73 @@
-import { Question } from "../types";
+import { Question, QuestionOption } from "../types";
+
+// ─── Country-specific account types ────────────────────────────────────────────
+export const ACCOUNT_TYPE_OPTIONS: Record<string, QuestionOption[]> = {
+  US: [
+    { value: "taxable", label: "Taxable brokerage account", description: "Standard account — capital gains and dividends taxed annually" },
+    { value: "roth_ira", label: "Roth IRA", description: "After-tax contributions, tax-free growth and withdrawals" },
+    { value: "traditional_ira", label: "Traditional IRA", description: "Pre-tax contributions, taxable at withdrawal" },
+    { value: "401k", label: "401(k) / employer plan", description: "Employer-sponsored retirement plan with limited fund selection" },
+    { value: "mixed", label: "Multiple accounts", description: "Spread across more than one account type" },
+  ],
+  IN: [
+    { value: "demat", label: "Demat / Trading account", description: "Standard brokerage account — capital gains taxed at 10–15%" },
+    { value: "ppf", label: "PPF (Public Provident Fund)", description: "Government-backed, tax-free returns, 15-year lock-in" },
+    { value: "nps", label: "NPS (National Pension System)", description: "Tax-advantaged pension — Section 80C + 80CCD(1B) deductions" },
+    { value: "elss", label: "ELSS (Tax-Saving Mutual Fund)", description: "Equity mutual funds with 3-year lock-in and 80C deduction" },
+    { value: "mixed", label: "Multiple accounts", description: "Spread across more than one account type" },
+  ],
+  GB: [
+    { value: "gia", label: "General Investment Account (GIA)", description: "Standard account — dividends and gains subject to UK income / CGT" },
+    { value: "isa", label: "Stocks & Shares ISA", description: "Annual £20,000 allowance — all growth and income fully tax-free" },
+    { value: "sipp", label: "SIPP (Personal Pension)", description: "Self-invested pension — contributions get 20–45% tax relief" },
+    { value: "lisa", label: "Lifetime ISA (LISA)", description: "25% government bonus on up to £4,000/year (under 40s only)" },
+    { value: "mixed", label: "Multiple accounts", description: "Spread across more than one account type" },
+  ],
+  CA: [
+    { value: "non_reg", label: "Non-registered account", description: "Standard account — capital gains and dividends taxable" },
+    { value: "tfsa", label: "TFSA (Tax-Free Savings Account)", description: "Contributions post-tax, all growth and withdrawals tax-free" },
+    { value: "rrsp", label: "RRSP (Retirement Savings Plan)", description: "Pre-tax contributions, tax-deferred growth, taxed at withdrawal" },
+    { value: "fhsa", label: "FHSA (First Home Savings Account)", description: "Tax-free savings for first-time home buyers — $8,000/year limit" },
+    { value: "mixed", label: "Multiple accounts", description: "Spread across more than one account type" },
+  ],
+  AU: [
+    { value: "non_super", label: "Investment account (non-super)", description: "Standard account — CGT and dividend income taxed at marginal rate" },
+    { value: "super", label: "Superannuation", description: "15% tax on contributions and earnings — preserved until retirement" },
+    { value: "smsf", label: "Self-Managed Super Fund (SMSF)", description: "Full control over your super investments — higher compliance cost" },
+    { value: "mixed", label: "Multiple accounts", description: "Spread across more than one account type" },
+  ],
+  SG: [
+    { value: "brokerage", label: "Standard brokerage account", description: "No capital gains tax in Singapore — dividends taxable for some" },
+    { value: "cpf_oa", label: "CPF Ordinary Account (OA)", description: "Use CPF OA funds to invest via the CPFIS scheme" },
+    { value: "srs", label: "SRS (Supplementary Retirement Scheme)", description: "Voluntary scheme with tax deduction on contributions" },
+    { value: "mixed", label: "Multiple accounts", description: "Spread across more than one account type" },
+  ],
+  AE: [
+    { value: "brokerage", label: "Standard brokerage account", description: "No income tax or capital gains tax in the UAE" },
+    { value: "mixed", label: "Multiple accounts", description: "Spread across more than one account type" },
+  ],
+  OTHER: [
+    { value: "taxable", label: "Standard / taxable account", description: "Regular investment account subject to your country's tax rules" },
+    { value: "pension", label: "Pension / retirement account", description: "Tax-advantaged retirement savings vehicle" },
+    { value: "mixed", label: "Multiple accounts", description: "Spread across more than one account type" },
+  ],
+};
+
+// ─── Country-specific currency config ──────────────────────────────────────────
+export const CURRENCY_CONFIG: Record<string, { symbol: string; locale: string; factor: number }> = {
+  US:    { symbol: "$",  locale: "en-US", factor: 1 },
+  IN:    { symbol: "₹",  locale: "en-IN", factor: 83 },   // approx INR/USD
+  GB:    { symbol: "£",  locale: "en-GB", factor: 0.79 },
+  CA:    { symbol: "CA$", locale: "en-CA", factor: 1.36 },
+  AU:    { symbol: "A$", locale: "en-AU", factor: 1.52 },
+  SG:    { symbol: "S$", locale: "en-SG", factor: 1.34 },
+  AE:    { symbol: "AED", locale: "en-AE", factor: 3.67 },
+  OTHER: { symbol: "$",  locale: "en-US", factor: 1 },
+};
+
+export function getCurrencyConfig(country: string) {
+  return CURRENCY_CONFIG[country] || CURRENCY_CONFIG["OTHER"];
+}
 
 export const questions: Question[] = [
   {
@@ -248,33 +317,7 @@ export const questions: Question[] = [
     subtext:
       "The account type changes which instruments we recommend and how we think about dividends versus growth.",
     type: "single",
-    options: [
-      {
-        value: "taxable",
-        label: "Taxable brokerage account",
-        description: "Standard account — capital gains and dividends are taxable annually",
-      },
-      {
-        value: "roth_ira",
-        label: "Roth IRA",
-        description: "After-tax contributions, tax-free growth and withdrawals",
-      },
-      {
-        value: "traditional_ira",
-        label: "Traditional IRA",
-        description: "Pre-tax contributions, taxable at withdrawal",
-      },
-      {
-        value: "401k",
-        label: "401(k) or employer plan",
-        description: "Employer-sponsored — limited fund selection but tax-advantaged",
-      },
-      {
-        value: "mixed",
-        label: "Multiple accounts",
-        description: "I'll spread this across more than one account type",
-      },
-    ],
+    options: [], // dynamically replaced in Profiler based on country
   },
   {
     id: "focus_areas",

@@ -184,6 +184,50 @@ const Results: React.FC = () => {
           ))}
         </motion.div>
 
+        {/* PORTFOLIO TUNER — prominent, above holdings */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.18 }}
+          className="border border-gold-500/20 bg-gold-500/3 p-8 no-print"
+        >
+          <div className="flex items-start justify-between mb-6">
+            <div>
+              <span className="label-overline opacity-50 block mb-2">Adjust your portfolio</span>
+              <h2 className="font-display text-2xl text-cream-50">
+                Not quite right? Tune the risk level.
+              </h2>
+            </div>
+            {tuning && <span className="text-cream-200/30 font-sans text-xs animate-pulse mt-1">Rebuilding...</span>}
+          </div>
+
+          <div className="grid grid-cols-5 gap-2 mb-6">
+            {TUNE_LABELS.map((label, i) => (
+              <button
+                key={i}
+                onClick={() => handleTune(i)}
+                className={`py-3 px-2 text-center border transition-all duration-200 text-xs font-sans ${
+                  tuneLevel === i
+                    ? "border-gold-500 text-gold-400 bg-gold-500/10"
+                    : "border-white/8 text-cream-200/30 hover:border-white/20 hover:text-cream-200/60"
+                }`}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
+
+          <input
+            type="range" min={0} max={4} step={1} value={tuneLevel}
+            onChange={(e) => handleTune(Number(e.target.value))}
+            className="w-full mb-4"
+            style={{ background: `linear-gradient(to right, #C9A96E ${(tuneLevel / 4) * 100}%, rgba(201,169,110,0.15) ${(tuneLevel / 4) * 100}%)` }}
+          />
+          <div className="flex justify-between">
+            <span className="font-sans text-xs text-cream-200/20">Preserve capital</span>
+            <span className="font-sans text-xs text-cream-200/20">Maximum growth</span>
+          </div>
+        </motion.div>
+
         {/* Holdings */}
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}>
           <h2 className="font-display text-2xl text-cream-50 mb-8">Portfolio Allocation</h2>
@@ -403,9 +447,18 @@ const Results: React.FC = () => {
         </motion.div>
 
         {/* Actions */}
-        <div className="flex gap-4">
-          <button onClick={() => navigate("/")} className="btn-ghost">
+        <div className="flex gap-4 no-print">
+          <button
+            onClick={() => window.print()}
+            className="btn-primary"
+          >
+            Download report
+          </button>
+          <button onClick={() => navigate("/start")} className="btn-ghost">
             Start a new profile
+          </button>
+          <button onClick={() => navigate("/assess")} className="btn-ghost">
+            Assess existing portfolio
           </button>
         </div>
 
