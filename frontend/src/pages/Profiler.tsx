@@ -1,5 +1,5 @@
-import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import React, { useState, useEffect } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { questions } from "../data/questions";
 import { UserProfile } from "../types";
@@ -8,18 +8,27 @@ import SliderInput from "../components/ui/SliderInput";
 
 const Profiler: React.FC = () => {
   const navigate = useNavigate();
+  const location = useLocation();
+  const userInfo = location.state?.userInfo;
+
   const [current, setCurrent] = useState(0);
   const [profile, setProfile] = useState<UserProfile>({});
+  const [otherText, setOtherText] = useState<Record<string, string>>({});
   const [direction, setDirection] = useState(1);
 
   const question = questions[current];
-  const progress = ((current) / questions.length) * 100;
+  const progress = (current / questions.length) * 100;
   const answer = profile[question.id];
 
-  const isAnswered = () => {
-    if (!answer && answer !== 0) return false;
-    if (question.type === "multi") return Array.isArray(answer) && (answer as string[]).length > 0;
-    return true;
+  const isAnswered = (): boolean => {
+    if (question.type === "slider") return answer !== undefined && answer !== null;
+    if (question.type === "multi") return true; // always skippable
+    if (question.type === "single") {
+      if (!answer) return false;
+      if (answer === "other") return (otherText[question.id] || "").trim().length > 0;
+      return true;
+    }
+    return false;
   };
 
   const handleSingle = (value: string) => {
@@ -31,19 +40,23 @@ const Profiler: React.FC = () => {
   };
 
   const handleMulti = (value: string) => {
-    const current = (answer as string[]) || [];
-    const updated = current.includes(value)
-      ? current.filter((v) => v !== value)
-      : [...current, value];
+    const cur = (answer as string[]) || [];
+    const updated = cur.includes(value)
+      ? cur.filter((v) => v !== value)
+      : [...cur, value];
     setProfile((p) => ({ ...p, [question.id]: updated }));
   };
 
   const handleNext = () => {
+    // For "other" option, save the text as the answer
+    if (answer === "other" && otherText[question.id]) {
+      setProfile((p) => ({ ...p, [question.id]: `other:${otherText[question.id]}` }));
+    }
     if (current < questions.length - 1) {
       setDirection(1);
       setCurrent((c) => c + 1);
     } else {
-      navigate("/results", { state: { profile } });
+      navigate("/results", { state: { profile, userInfo } });
     }
   };
 
@@ -54,28 +67,22 @@ const Profiler: React.FC = () => {
     }
   };
 
-  const handleSkip = () => {
-    setDirection(1);
-    if (current < questions.length - 1) {
-      setCurrent((c) => c + 1);
-    } else {
-      navigate("/results", { state: { profile } });
-    }
-  };
-
   // Initialize slider defaults
-  React.useEffect(() => {
-    if (question.type === "slider" && question.sliderConfig && !profile[question.id]) {
+  useEffect(() => {
+    if (question.type === "slider" && question.sliderConfig && profile[question.id] === undefined) {
       const { min, max } = question.sliderConfig;
-      setProfile((p) => ({ ...p, [question.id]: Math.round((min + max) / 2) }));
+      const defaultVal = question.id === "age" ? 35 : Math.round((min + max) / 3);
+      setProfile((p) => ({ ...p, [question.id]: defaultVal }));
     }
   }, [current]);
 
   const variants = {
-    enter: (dir: number) => ({ opacity: 0, x: dir > 0 ? 40 : -40 }),
+    enter: (dir: number) => ({ opacity: 0, x: dir > 0 ? 50 : -50 }),
     center: { opacity: 1, x: 0 },
-    exit: (dir: number) => ({ opacity: 0, x: dir > 0 ? -40 : 40 }),
+    exit: (dir: number) => ({ opacity: 0, x: dir > 0 ? -50 : 50 }),
   };
+
+  const firstName = userInfo?.name?.split(" ")[0];
 
   return (
     <div className="min-h-screen bg-navy-950 flex flex-col">
@@ -90,7 +97,7 @@ const Profiler: React.FC = () => {
 
       {/* Step counter */}
       <div className="fixed top-6 right-10 z-50">
-        <span className="label-overline opacity-40">
+        <span className="label-overline opacity-30">
           {current + 1} / {questions.length}
         </span>
       </div>
@@ -104,16 +111,15 @@ const Profiler: React.FC = () => {
       </div>
 
       {/* Main content */}
-      <div className="flex-1 flex items-center justify-center px-6 pt-24 pb-24">
+      <div className="flex-1 flex items-center justify-center px-6 pt-24 pb-28">
         <div className="w-full max-w-2xl">
-          {/* Category */}
           <motion.div
             key={`cat-${current}`}
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             className="mb-4"
           >
-            <span className="label-overline opacity-50">{question.category}</span>
+            <span className="label-overline opacity-30">{question.category}</span>
           </motion.div>
 
           <AnimatePresence mode="wait" custom={direction}>
@@ -124,14 +130,15 @@ const Profiler: React.FC = () => {
               initial="enter"
               animate="center"
               exit="exit"
-              transition={{ duration: 0.35, ease: "easeInOut" }}
+              transition={{ duration: 0.3, ease: "easeInOut" }}
             >
-              {/* Question */}
               <h2 className="font-display text-3xl md:text-4xl text-cream-50 mb-3 leading-tight">
-                {question.question}
+                {current === 0 && firstName
+                  ? `${firstName}, how old are you?`
+                  : question.question}
               </h2>
               {question.subtext && (
-                <p className="text-cream-200/40 font-sans text-sm mb-10 leading-relaxed">
+                <p className="text-cream-200/35 font-sans text-sm mb-10 leading-relaxed max-w-lg">
                   {question.subtext}
                 </p>
               )}
@@ -141,13 +148,41 @@ const Profiler: React.FC = () => {
                 {question.type === "single" && question.options && (
                   <div className="grid gap-3">
                     {question.options.map((opt) => (
-                      <OptionCard
-                        key={opt.value}
-                        label={opt.label}
-                        description={opt.description}
-                        selected={answer === opt.value}
-                        onClick={() => handleSingle(opt.value)}
-                      />
+                      <React.Fragment key={opt.value}>
+                        <OptionCard
+                          label={opt.label}
+                          description={opt.description}
+                          selected={
+                            answer === opt.value ||
+                            (opt.value === "other" && typeof answer === "string" && answer.startsWith("other:"))
+                          }
+                          onClick={() => handleSingle(opt.value)}
+                        />
+                        {/* Text input for "Other" */}
+                        {opt.isOther &&
+                          (answer === "other" ||
+                            (typeof answer === "string" && answer.startsWith("other:"))) && (
+                            <motion.div
+                              initial={{ opacity: 0, height: 0 }}
+                              animate={{ opacity: 1, height: "auto" }}
+                              className="pl-9"
+                            >
+                              <input
+                                autoFocus
+                                type="text"
+                                value={otherText[question.id] || ""}
+                                onChange={(e) =>
+                                  setOtherText((p) => ({
+                                    ...p,
+                                    [question.id]: e.target.value,
+                                  }))
+                                }
+                                placeholder="Describe your goal..."
+                                className="w-full bg-transparent border-b border-gold-500/40 py-3 font-sans text-sm text-cream-50 placeholder:text-cream-200/25 focus:outline-none focus:border-gold-500/70 transition-colors"
+                              />
+                            </motion.div>
+                          )}
+                      </React.Fragment>
                     ))}
                   </div>
                 )}
@@ -168,12 +203,12 @@ const Profiler: React.FC = () => {
                 )}
 
                 {question.type === "slider" && question.sliderConfig && (
-                  <div className="py-8 px-4">
+                  <div className="py-8 px-2">
                     <SliderInput
                       min={question.sliderConfig.min}
                       max={question.sliderConfig.max}
                       step={question.sliderConfig.step}
-                      value={(answer as number) || question.sliderConfig.min}
+                      value={(answer as number) ?? question.sliderConfig.min}
                       minLabel={question.sliderConfig.minLabel}
                       maxLabel={question.sliderConfig.maxLabel}
                       formatValue={question.sliderConfig.formatValue}
@@ -193,7 +228,7 @@ const Profiler: React.FC = () => {
           <button
             onClick={handleBack}
             disabled={current === 0}
-            className="text-cream-200/30 hover:text-cream-200/60 text-xs tracking-widest uppercase font-sans transition-colors disabled:opacity-20 disabled:cursor-not-allowed"
+            className="text-cream-200/25 hover:text-cream-200/60 text-xs tracking-widest uppercase font-sans transition-colors disabled:opacity-10 disabled:cursor-not-allowed"
           >
             ← Back
           </button>
@@ -201,7 +236,7 @@ const Profiler: React.FC = () => {
           <div className="flex items-center gap-4">
             {question.type === "multi" && (
               <button
-                onClick={handleSkip}
+                onClick={handleNext}
                 className="text-cream-200/30 hover:text-cream-200/60 text-xs tracking-widest uppercase font-sans transition-colors"
               >
                 Skip
@@ -209,8 +244,8 @@ const Profiler: React.FC = () => {
             )}
             <button
               onClick={handleNext}
-              disabled={question.type !== "multi" && !isAnswered()}
-              className="btn-primary disabled:opacity-30 disabled:cursor-not-allowed"
+              disabled={!isAnswered()}
+              className="btn-primary disabled:opacity-25 disabled:cursor-not-allowed"
             >
               {current === questions.length - 1 ? "Build my portfolio →" : "Continue →"}
             </button>

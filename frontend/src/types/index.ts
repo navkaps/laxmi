@@ -4,6 +4,7 @@ export interface QuestionOption {
   value: string;
   label: string;
   description?: string;
+  isOther?: boolean;
 }
 
 export interface Question {
@@ -22,6 +23,13 @@ export interface Question {
     unit?: string;
     formatValue?: (v: number) => string;
   };
+}
+
+export interface UserInfo {
+  name: string;
+  email: string;
+  phone: string;
+  country: string;
 }
 
 export interface UserProfile {
@@ -43,6 +51,13 @@ export interface BacktestData {
   benchmarkValue: number;
 }
 
+export interface TuneLevelSummary {
+  level: number;
+  riskProfile: string;
+  expectedAnnualReturn: string;
+  volatility: string;
+}
+
 export interface PortfolioRecommendation {
   profileSummary: string;
   riskProfile: string;
@@ -53,4 +68,6 @@ export interface PortfolioRecommendation {
   keyStrengths: string[];
   considerations: string[];
   backtestData: BacktestData[];
+  profileLevel: number;
+  allProfiles: TuneLevelSummary[];
 }

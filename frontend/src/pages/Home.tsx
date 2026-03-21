@@ -118,7 +118,7 @@ const Home: React.FC = () => {
           className="flex flex-col sm:flex-row gap-4 justify-center"
         >
           <button
-            onClick={() => navigate("/profile")}
+            onClick={() => navigate("/start")}
             className="btn-primary"
           >
             Begin your profile
