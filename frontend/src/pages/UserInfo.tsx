@@ -1,7 +1,8 @@
-import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { motion } from "framer-motion";
-import { UserInfo } from "../types";
+import React, { useState, useRef, useEffect } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
+import { motion, AnimatePresence } from "framer-motion";
+import axios from "axios";
+import { UserInfo, CurrentHolding } from "../types";
 
 const COUNTRIES = [
   { code: "US", name: "United States", flag: "🇺🇸" },
@@ -16,13 +17,46 @@ const COUNTRIES = [
 
 const UserInfoPage: React.FC = () => {
   const navigate = useNavigate();
-  const [info, setInfo] = useState<UserInfo>({
-    name: "",
-    email: "",
-    phone: "",
-    country: "",
-  });
+  const location = useLocation();
+  const fileRef = useRef<HTMLInputElement>(null);
+
+  const [info, setInfo] = useState<UserInfo>({ name: "", email: "", phone: "", country: "" });
   const [errors, setErrors] = useState<Partial<Record<keyof UserInfo, string>>>({});
+  const [showPortfolio, setShowPortfolio] = useState(false);
+  const [currentHoldings, setCurrentHoldings] = useState<CurrentHolding[]>([]);
+  const [uploading, setUploading] = useState(false);
+  const [uploadError, setUploadError] = useState<string | null>(null);
+  const [dragOver, setDragOver] = useState(false);
+
+  // Pre-load holdings if coming from Assess page
+  useEffect(() => {
+    const preloaded = (location.state as any)?.currentHoldings;
+    if (preloaded?.length > 0) {
+      setCurrentHoldings(preloaded);
+      setShowPortfolio(true);
+    }
+  }, []);
+
+  const handleFileUpload = async (f: File) => {
+    setUploading(true);
+    setUploadError(null);
+    const formData = new FormData();
+    formData.append("file", f);
+    try {
+      const res = await axios.post("http://localhost:4000/api/parse-portfolio", formData, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
+      if (res.data.holdings?.length > 0) {
+        setCurrentHoldings(res.data.holdings);
+      } else {
+        setUploadError(res.data.error || "No holdings found. Try a CSV export from your brokerage.");
+      }
+    } catch {
+      setUploadError("Upload failed. Please try again.");
+    } finally {
+      setUploading(false);
+    }
+  };
 
   const validate = () => {
     const e: Partial<Record<keyof UserInfo, string>> = {};
@@ -36,15 +70,17 @@ const UserInfoPage: React.FC = () => {
   const handleSubmit = () => {
     const e = validate();
     if (Object.keys(e).length > 0) { setErrors(e); return; }
-    navigate("/profile", { state: { userInfo: info } });
+    navigate("/profile", {
+      state: {
+        userInfo: {
+          ...info,
+          currentHoldings: currentHoldings.length > 0 ? currentHoldings : undefined,
+        },
+      },
+    });
   };
 
-  const field = (
-    id: "name" | "email" | "phone",
-    label: string,
-    placeholder: string,
-    type = "text"
-  ) => (
+  const field = (id: "name" | "email" | "phone", label: string, placeholder: string, type = "text") => (
     <div className="space-y-2">
       <label className="label-overline opacity-40">{label}</label>
       <input
@@ -64,7 +100,7 @@ const UserInfoPage: React.FC = () => {
   );
 
   return (
-    <div className="min-h-screen bg-navy-950 flex flex-col items-center justify-center px-6">
+    <div className="min-h-screen bg-navy-950 flex flex-col items-center justify-center px-6 py-16">
       {/* Logo */}
       <div className="fixed top-6 left-10 flex items-center gap-3">
         <div className="w-6 h-6 border border-gold-500/60 flex items-center justify-center">
@@ -74,15 +110,9 @@ const UserInfoPage: React.FC = () => {
       </div>
 
       <div className="w-full max-w-md">
-        <motion.div
-          initial={{ opacity: 0, y: 24 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6 }}
-        >
+        <motion.div initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }}>
           <span className="label-overline opacity-35 block mb-5">Before we begin</span>
-          <h1 className="font-display text-4xl text-cream-50 mb-3 leading-tight">
-            Tell us who you are.
-          </h1>
+          <h1 className="font-display text-4xl text-cream-50 mb-3 leading-tight">Tell us who you are.</h1>
           <p className="text-cream-200/35 font-sans text-sm leading-relaxed mb-12">
             Your profile and recommendation will be saved so we can personalise your experience.
           </p>
@@ -92,7 +122,7 @@ const UserInfoPage: React.FC = () => {
             {field("email", "Email address", "jane@example.com", "email")}
             {field("phone", "Phone number (optional)", "+1 555 000 0000", "tel")}
 
-            {/* Country selector */}
+            {/* Country */}
             <div className="space-y-3">
               <label className="label-overline opacity-40 block">Country</label>
               <div className="grid grid-cols-2 gap-2">
@@ -114,22 +144,125 @@ const UserInfoPage: React.FC = () => {
                     <span className="text-xl leading-none">{c.flag}</span>
                     <span className={`font-sans text-sm transition-colors ${
                       info.country === c.code ? "text-cream-50" : "text-cream-200/50"
-                    }`}>
-                      {c.name}
-                    </span>
+                    }`}>{c.name}</span>
                   </motion.button>
                 ))}
               </div>
-              {errors.country && (
-                <p className="text-red-400/60 font-sans text-xs">{errors.country}</p>
-              )}
+              {errors.country && <p className="text-red-400/60 font-sans text-xs">{errors.country}</p>}
+            </div>
+
+            {/* Optional existing portfolio */}
+            <div className="border-t border-white/6 pt-8">
+              <button
+                onClick={() => setShowPortfolio((v) => !v)}
+                className="flex items-start gap-4 w-full text-left group"
+              >
+                <div className={`mt-0.5 flex-shrink-0 w-4 h-4 border transition-all ${
+                  showPortfolio ? "border-gold-500 bg-gold-500" : "border-white/20 group-hover:border-white/35"
+                } flex items-center justify-center`}>
+                  {showPortfolio && (
+                    <svg width="8" height="6" viewBox="0 0 8 6" fill="none">
+                      <path d="M1 3l2 2 4-4" stroke="#0C1426" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                    </svg>
+                  )}
+                </div>
+                <div>
+                  <p className="font-sans text-sm text-cream-200/70 group-hover:text-cream-100 transition-colors">
+                    I already have investments
+                  </p>
+                  <p className="font-sans text-xs text-cream-200/28 mt-0.5 leading-relaxed">
+                    Optional — we'll show you exactly what to sell, keep, and buy to reach your ideal portfolio
+                  </p>
+                </div>
+              </button>
+
+              <AnimatePresence>
+                {showPortfolio && (
+                  <motion.div
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: "auto" }}
+                    exit={{ opacity: 0, height: 0 }}
+                    className="overflow-hidden"
+                  >
+                    <div className="mt-6">
+                      {currentHoldings.length === 0 ? (
+                        <div>
+                          <input
+                            ref={fileRef}
+                            type="file"
+                            accept=".csv,.xlsx,.xls,.pdf"
+                            className="hidden"
+                            onChange={(e) => { const f = e.target.files?.[0]; if (f) handleFileUpload(f); }}
+                          />
+                          <div
+                            onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
+                            onDragLeave={() => setDragOver(false)}
+                            onDrop={(e) => {
+                              e.preventDefault(); setDragOver(false);
+                              const f = e.dataTransfer.files[0]; if (f) handleFileUpload(f);
+                            }}
+                            onClick={() => fileRef.current?.click()}
+                            className={`cursor-pointer border transition-all px-6 py-8 flex flex-col items-center gap-3 ${
+                              dragOver ? "border-gold-500/50 bg-gold-500/5" : "border-white/8 hover:border-white/18 bg-navy-800/20"
+                            }`}
+                          >
+                            {uploading ? (
+                              <>
+                                <motion.div
+                                  animate={{ rotate: 360 }}
+                                  transition={{ repeat: Infinity, duration: 1.2, ease: "linear" }}
+                                  className="w-6 h-6 border border-gold-500/30 border-t-gold-500 rounded-full"
+                                />
+                                <p className="font-sans text-xs text-cream-200/35">Reading your portfolio...</p>
+                              </>
+                            ) : (
+                              <>
+                                <div className="w-8 h-8 border border-white/15 flex items-center justify-center">
+                                  <svg width="16" height="16" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.2" className="text-cream-200/30">
+                                    <path d="M10 13V4M10 4L7 7M10 4L13 7" strokeLinecap="round" strokeLinejoin="round"/>
+                                    <path d="M3 14v1a2 2 0 002 2h10a2 2 0 002-2v-1" strokeLinecap="round"/>
+                                  </svg>
+                                </div>
+                                <p className="font-sans text-sm text-cream-200/40">
+                                  Drop your portfolio file or <span className="text-gold-400">browse</span>
+                                </p>
+                                <p className="font-sans text-xs text-cream-200/20">CSV · Excel · PDF</p>
+                              </>
+                            )}
+                          </div>
+                          {uploadError && (
+                            <p className="font-sans text-xs text-cream-200/40 mt-3 leading-relaxed">{uploadError}</p>
+                          )}
+                        </div>
+                      ) : (
+                        <div>
+                          <div className="flex justify-between items-center mb-3">
+                            <span className="label-overline opacity-25 text-xs">{currentHoldings.length} holdings loaded</span>
+                            <button
+                              onClick={() => setCurrentHoldings([])}
+                              className="font-sans text-xs text-cream-200/25 hover:text-cream-200/60 transition-colors"
+                            >
+                              Clear
+                            </button>
+                          </div>
+                          <div className="space-y-1.5 max-h-44 overflow-y-auto">
+                            {currentHoldings.map((h, i) => (
+                              <div key={i} className="flex justify-between border border-white/5 px-4 py-2.5">
+                                <span className="font-sans text-sm font-medium text-gold-400 tracking-wider">{h.ticker}</span>
+                                <span className="font-sans text-sm text-cream-200/60">{h.allocation}%</span>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </div>
           </div>
 
-          <button
-            onClick={handleSubmit}
-            className="btn-primary w-full mt-12 text-center block"
-          >
+          <button onClick={handleSubmit} className="btn-primary w-full mt-10 text-center block">
             Continue to your profile →
           </button>
 

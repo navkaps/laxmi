@@ -131,6 +131,43 @@ const Results: React.FC = () => {
 
   const { holdings, riskProfile, rationale, profileSummary, expectedAnnualReturn, volatility, keyStrengths, considerations, backtestData } = recommendation;
 
+  type TransitionAction = 'SELL' | 'TRIM' | 'KEEP' | 'ADD' | 'BUY';
+  interface TransitionItem {
+    ticker: string;
+    currentAlloc: number;
+    targetAlloc: number;
+    action: TransitionAction;
+  }
+
+  const computeTransitionPlan = (current: { ticker: string; allocation: number }[], recommended: typeof holdings): TransitionItem[] => {
+    const norm = (t: string) => t.toUpperCase().replace(/['.]/g, "");
+    const currentMap = new Map(current.map(h => [norm(h.ticker), h.allocation]));
+    const recMap = new Map(recommended.map(h => [norm(h.ticker), h.allocation]));
+    const items: TransitionItem[] = [];
+    const processed = new Set<string>();
+
+    for (const [ticker, curAlloc] of Array.from(currentMap.entries())) {
+      const targetAlloc = recMap.get(ticker) ?? 0;
+      let action: TransitionAction;
+      if (targetAlloc === 0) action = 'SELL';
+      else if (curAlloc > targetAlloc + 3) action = 'TRIM';
+      else if (targetAlloc > curAlloc + 3) action = 'ADD';
+      else action = 'KEEP';
+      items.push({ ticker, currentAlloc: curAlloc, targetAlloc, action });
+      processed.add(ticker);
+    }
+
+    for (const h of recommended) {
+      const t = norm(h.ticker);
+      if (!processed.has(t)) {
+        items.push({ ticker: h.ticker, currentAlloc: 0, targetAlloc: h.allocation, action: 'BUY' });
+      }
+    }
+
+    const order: Record<TransitionAction, number> = { SELL: 0, TRIM: 1, KEEP: 2, ADD: 3, BUY: 4 };
+    return items.sort((a, b) => order[a.action] - order[b.action]);
+  };
+
   const CustomTooltip = ({ active, payload, label }: any) => {
     if (!active || !payload?.length) return null;
     return (
@@ -277,6 +314,71 @@ const Results: React.FC = () => {
             </motion.div>
           </AnimatePresence>
         </motion.div>
+
+        {/* Transition Plan */}
+        {userInfo?.currentHoldings && userInfo.currentHoldings.length > 0 && (() => {
+          const plan = computeTransitionPlan(userInfo.currentHoldings!, holdings);
+          const actionMeta: Record<TransitionAction, { label: string; color: string; bg: string }> = {
+            SELL:  { label: "Sell all",    color: "text-red-400/80",    bg: "bg-red-400/8 border-red-400/20" },
+            TRIM:  { label: "Trim",        color: "text-amber-400/80",  bg: "bg-amber-400/8 border-amber-400/20" },
+            KEEP:  { label: "Keep",        color: "text-cream-200/45",  bg: "bg-white/4 border-white/8" },
+            ADD:   { label: "Add more",    color: "text-emerald-400/80",bg: "bg-emerald-400/6 border-emerald-400/20" },
+            BUY:   { label: "Buy",         color: "text-emerald-400/80",bg: "bg-emerald-400/6 border-emerald-400/20" },
+          };
+          return (
+            <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.25 }}>
+              <h2 className="font-display text-2xl text-cream-50 mb-2">Your Transition Plan</h2>
+              <p className="font-sans text-sm text-cream-200/35 mb-8 leading-relaxed">
+                Exactly what to do with your existing portfolio to reach this allocation.
+              </p>
+              <div className="space-y-2">
+                {/* Header */}
+                <div className="grid grid-cols-12 gap-4 px-5 mb-3">
+                  <div className="col-span-3"><span className="label-overline opacity-20 text-xs">Ticker</span></div>
+                  <div className="col-span-3"><span className="label-overline opacity-20 text-xs">Action</span></div>
+                  <div className="col-span-2 text-right"><span className="label-overline opacity-20 text-xs">Current</span></div>
+                  <div className="col-span-1 text-center"><span className="label-overline opacity-20 text-xs">→</span></div>
+                  <div className="col-span-2 text-right"><span className="label-overline opacity-20 text-xs">Target</span></div>
+                </div>
+                {plan.map((item, i) => {
+                  const meta = actionMeta[item.action];
+                  return (
+                    <motion.div
+                      key={item.ticker}
+                      initial={{ opacity: 0, x: -8 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: 0.3 + i * 0.03 }}
+                      className={`grid grid-cols-12 gap-4 items-center border px-5 py-3.5 ${meta.bg}`}
+                    >
+                      <div className="col-span-3">
+                        <span className="font-sans text-sm font-medium text-cream-100 tracking-wider">{item.ticker}</span>
+                      </div>
+                      <div className="col-span-3">
+                        <span className={`font-sans text-xs font-medium ${meta.color}`}>{meta.label}</span>
+                      </div>
+                      <div className="col-span-2 text-right">
+                        <span className="font-sans text-sm text-cream-200/50">
+                          {item.currentAlloc > 0 ? `${item.currentAlloc}%` : "—"}
+                        </span>
+                      </div>
+                      <div className="col-span-1 text-center">
+                        <span className="text-cream-200/20 font-sans text-xs">→</span>
+                      </div>
+                      <div className="col-span-2 text-right">
+                        <span className={`font-sans text-sm font-medium ${item.targetAlloc > 0 ? "text-cream-50" : "text-cream-200/30"}`}>
+                          {item.targetAlloc > 0 ? `${item.targetAlloc}%` : "0%"}
+                        </span>
+                      </div>
+                    </motion.div>
+                  );
+                })}
+              </div>
+              <p className="font-sans text-xs text-cream-200/18 mt-6 leading-relaxed">
+                Execute trades in order: sell positions first to free capital, then purchase new holdings. Consult a licensed financial advisor before making investment decisions.
+              </p>
+            </motion.div>
+          );
+        })()}
 
         {/* 30-year backtest */}
         {backtestData?.length > 0 && (
@@ -461,6 +563,32 @@ const Results: React.FC = () => {
             Assess existing portfolio
           </button>
         </div>
+
+        {/* Account placement guidance */}
+        {profile?.account_type && profile.account_type !== "mixed" && (() => {
+          const acctMap: Record<string, { title: string; guidance: string }> = {
+            roth_ira:       { title: "Roth IRA placement strategy", guidance: "Your Roth IRA grows tax-free — ideal for your highest-growth holdings (tech ETFs, small caps). Allocate your most aggressive positions here. Bonds and dividend payers can sit in a taxable account instead." },
+            traditional_ira:{ title: "Traditional IRA placement strategy", guidance: "Tax-deferred growth means income-generating assets (bonds, REITs, dividend ETFs) belong here — you defer the tax until withdrawal. Hold growth-oriented ETFs in a Roth if you have one." },
+            "401k":         { title: "401(k) placement strategy", guidance: "Maximise your employer match first — it's an instant 50–100% return. Within the 401(k), favour the lowest-cost index funds available. Hold any alternative assets or individual stocks in a separate taxable or Roth account." },
+            taxable:        { title: "Taxable account strategy", guidance: "In a taxable account, tax efficiency is critical. Favour low-turnover index ETFs (VTI, VXUS) over actively managed funds. Consider tax-loss harvesting annually. Hold bonds in a tax-advantaged account if possible — bond income is taxed as ordinary income." },
+            isa:            { title: "ISA placement strategy", guidance: "Your Stocks & Shares ISA shelters all growth and income from UK tax — maximise your annual £20,000 allowance. Hold your highest-growth and dividend-paying assets here first." },
+            sipp:           { title: "SIPP placement strategy", guidance: "Your SIPP receives tax relief on contributions (up to 60% effective relief for higher-rate taxpayers). Ideal for long-term growth assets. Remember the 25% tax-free lump sum at retirement — plan for this in your asset mix." },
+            ppf:            { title: "PPF placement strategy", guidance: "PPF provides guaranteed 7.1% tax-free returns — use your full ₹1.5L annual limit. It's your lowest-risk, highest-certainty holding. Let equity ETFs (NIFTYBEES, MIDFTY) handle the growth component of your portfolio." },
+            demat:          { title: "Demat account strategy", guidance: "Your equity holdings in a demat account are subject to LTCG above ₹1 lakh. Hold ETFs for at least 12 months to qualify for 10% LTCG vs 15% STCG. Consider ELSS funds for Section 80C benefits alongside your direct equity." },
+          };
+          const acct = String(profile.account_type);
+          const guidance = acctMap[acct];
+          if (!guidance) return null;
+          return (
+            <motion.div
+              initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }}
+              className="border-l-2 border-gold-500/25 pl-8 py-1"
+            >
+              <h3 className="label-overline mb-3 opacity-35">{guidance.title}</h3>
+              <p className="font-sans text-sm text-cream-200/55 leading-relaxed max-w-3xl">{guidance.guidance}</p>
+            </motion.div>
+          );
+        })()}
 
         {/* Disclaimer */}
         <div className="border-t border-white/5 pt-8">

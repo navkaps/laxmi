@@ -248,7 +248,7 @@ const Assess: React.FC = () => {
           <div className="flex gap-4 no-print">
             <button onClick={() => window.print()} className="btn-primary">Download report</button>
             <button onClick={() => setAssessment(null)} className="btn-ghost">Analyse another</button>
-            <button onClick={() => navigate("/start")} className="btn-ghost">Build optimised portfolio →</button>
+            <button onClick={() => navigate("/start", { state: { currentHoldings: activeHoldings } })} className="btn-ghost">Build optimised portfolio →</button>
           </div>
 
           <div className="border-t border-white/5 pt-8">

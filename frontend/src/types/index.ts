@@ -25,11 +25,17 @@ export interface Question {
   };
 }
 
+export interface CurrentHolding {
+  ticker: string;
+  allocation: number;
+}
+
 export interface UserInfo {
   name: string;
   email: string;
   phone: string;
   country: string;
+  currentHoldings?: CurrentHolding[];
 }
 
 export interface UserProfile {
