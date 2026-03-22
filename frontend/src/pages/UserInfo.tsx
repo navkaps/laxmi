@@ -80,19 +80,19 @@ const UserInfoPage: React.FC = () => {
   return (
     <div className="min-h-screen bg-navy-950 flex flex-col items-center justify-center px-6 py-16">
       {/* Logo */}
-      {/* Logo — Option B: gradient square with arrow */}
+      {/* Logo */}
       <div className="fixed top-6 left-10 flex items-center gap-3">
         <svg width="28" height="28" viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
           <defs>
-            <linearGradient id="g-b" x1="0" y1="0" x2="28" y2="28" gradientUnits="userSpaceOnUse">
+            <linearGradient id="g-logo" x1="0" y1="0" x2="28" y2="28" gradientUnits="userSpaceOnUse">
               <stop stopColor="#6366F1"/><stop offset="1" stopColor="#7C3AED"/>
             </linearGradient>
           </defs>
-          <rect width="28" height="28" rx="6" fill="url(#g-b)"/>
+          <rect width="28" height="28" rx="6" fill="url(#g-logo)"/>
           <path d="M14 20 L14 9 M10 13 L14 9 L18 13" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
         </svg>
-        <span className="font-display text-lg font-bold tracking-tight gradient-text">Laxmi</span>
-        <span className="hidden sm:inline font-sans text-xs text-white/25 tracking-wide border-l border-white/10 pl-2 ml-1">Your AI wealth advisor</span>
+        <span className="font-display text-lg font-bold tracking-tight text-white">Laxmi</span>
+        <span className="hidden sm:inline font-sans text-xs text-white/50 tracking-wide border-l border-white/15 pl-2 ml-1">Your AI wealth advisor</span>
       </div>
 
       <div className="w-full max-w-md">

@@ -170,19 +170,19 @@ const Profiler: React.FC = () => {
       </div>
 
       {/* Logo */}
-      {/* Logo — Option C: gradient circle monogram */}
+      {/* Logo */}
       <div className="fixed top-6 left-10 z-50 flex items-center gap-3">
         <svg width="28" height="28" viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
           <defs>
-            <linearGradient id="g-c" x1="0" y1="0" x2="28" y2="28" gradientUnits="userSpaceOnUse">
-              <stop stopColor="#818CF8"/><stop offset="1" stopColor="#C084FC"/>
+            <linearGradient id="g-logo" x1="0" y1="0" x2="28" y2="28" gradientUnits="userSpaceOnUse">
+              <stop stopColor="#6366F1"/><stop offset="1" stopColor="#7C3AED"/>
             </linearGradient>
           </defs>
-          <circle cx="14" cy="14" r="13" fill="url(#g-c)"/>
-          <path d="M10 7 L10 21 L18 21" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
+          <rect width="28" height="28" rx="6" fill="url(#g-logo)"/>
+          <path d="M14 20 L14 9 M10 13 L14 9 L18 13" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
         </svg>
-        <span className="font-display text-lg font-bold tracking-tight gradient-text">Laxmi</span>
-        <span className="hidden sm:inline font-sans text-xs text-white/25 tracking-wide border-l border-white/10 pl-2 ml-1">Your AI wealth advisor</span>
+        <span className="font-display text-lg font-bold tracking-tight text-white">Laxmi</span>
+        <span className="hidden sm:inline font-sans text-xs text-white/50 tracking-wide border-l border-white/15 pl-2 ml-1">Your AI wealth advisor</span>
       </div>
 
       {/* Main content */}

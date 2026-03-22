@@ -221,18 +221,19 @@ const Results: React.FC = () => {
   return (
     <div className="min-h-screen bg-navy-950 pb-24">
       {/* Logo */}
-      {/* Logo — Option D: ascending staircase mark */}
+      {/* Logo */}
       <div className="fixed top-6 left-10 z-50 flex items-center gap-3">
-        <svg width="30" height="24" viewBox="0 0 30 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <svg width="28" height="28" viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
           <defs>
-            <linearGradient id="g-d" x1="0" y1="24" x2="30" y2="0" gradientUnits="userSpaceOnUse">
-              <stop stopColor="#6366F1"/><stop offset="1" stopColor="#FB7185"/>
+            <linearGradient id="g-logo" x1="0" y1="0" x2="28" y2="28" gradientUnits="userSpaceOnUse">
+              <stop stopColor="#6366F1"/><stop offset="1" stopColor="#7C3AED"/>
             </linearGradient>
           </defs>
-          <path d="M2 22 L2 16 L10 16 L10 10 L18 10 L18 4 L28 4" stroke="url(#g-d)" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"/>
+          <rect width="28" height="28" rx="6" fill="url(#g-logo)"/>
+          <path d="M14 20 L14 9 M10 13 L14 9 L18 13" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
         </svg>
-        <span className="font-display text-lg font-bold tracking-tight gradient-text">Laxmi</span>
-        <span className="hidden sm:inline font-sans text-xs text-white/25 tracking-wide border-l border-white/10 pl-2 ml-1">Your AI wealth advisor</span>
+        <span className="font-display text-lg font-bold tracking-tight text-white">Laxmi</span>
+        <span className="hidden sm:inline font-sans text-xs text-white/50 tracking-wide border-l border-white/15 pl-2 ml-1">Your AI wealth advisor</span>
       </div>
 
       {/* Header */}
