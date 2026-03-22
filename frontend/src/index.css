@@ -61,12 +61,9 @@
 
 @layer components {
 
-  /* ── Gradient text ─────────────────────────────────────── */
+  /* ── Accent text — single indigo, no rainbow ───────────── */
   .gradient-text {
-    background: linear-gradient(135deg, #818CF8 0%, #A78BFA 50%, #FB7185 100%);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
+    color: #818CF8;
   }
 
   /* ── Buttons ───────────────────────────────────────────── */

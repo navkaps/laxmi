@@ -110,11 +110,11 @@ const Home: React.FC = () => {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8, delay: 0.2 }}
-          className="font-display text-5xl md:text-7xl font-extrabold text-cream-50 leading-[1.05] tracking-tight mb-6"
+          className="font-display text-5xl md:text-7xl font-extrabold text-white leading-[1.05] tracking-tight mb-6"
         >
           Your portfolio,
           <br />
-          <span className="gradient-text italic font-bold">precisely crafted.</span>
+          <span className="text-white/70 italic font-bold">precisely crafted.</span>
         </motion.h1>
 
         <motion.p
@@ -161,7 +161,7 @@ const Home: React.FC = () => {
             { label: "Profile questions", value: "10 questions" },
           ].map((stat) => (
             <div key={stat.label} className="text-center">
-              <div className="font-display text-xl gradient-text">{stat.value}</div>
+              <div className="font-display text-xl text-white font-semibold">{stat.value}</div>
               <div className="label-overline mt-1 opacity-50">{stat.label}</div>
             </div>
           ))}
