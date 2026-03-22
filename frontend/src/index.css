@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=Inter:wght@300;400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,700;1,800&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -16,7 +16,7 @@
   body {
     background-color: #07071A;
     color: #F1F5F9;
-    font-family: 'Inter', system-ui, sans-serif;
+    font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
     overflow-x: hidden;
   }
 
@@ -76,7 +76,7 @@
     justify-content: center;
     background: linear-gradient(135deg, #6366F1, #8B5CF6);
     color: #ffffff;
-    font-family: 'Inter', sans-serif;
+    font-family: 'Plus Jakarta Sans', sans-serif;
     font-weight: 600;
     font-size: 0.75rem;
     letter-spacing: 0.12em;
@@ -100,7 +100,7 @@
     justify-content: center;
     border: 1px solid rgba(99,102,241,0.35);
     color: rgba(129,140,248,0.85);
-    font-family: 'Inter', sans-serif;
+    font-family: 'Plus Jakarta Sans', sans-serif;
     font-weight: 500;
     font-size: 0.75rem;
     letter-spacing: 0.12em;
@@ -133,7 +133,7 @@
   /* ── Labels ────────────────────────────────────────────── */
   .label-overline {
     color: #818CF8;
-    font-family: 'Inter', sans-serif;
+    font-family: 'Plus Jakarta Sans', sans-serif;
     font-weight: 600;
     font-size: 0.688rem;
     letter-spacing: 0.16em;
@@ -145,7 +145,7 @@
     background: rgba(244,63,94,0.12);
     border: 1px solid rgba(244,63,94,0.30);
     color: rgba(251,113,133,0.95);
-    font-family: 'Inter', sans-serif;
+    font-family: 'Plus Jakarta Sans', sans-serif;
     font-size: 0.875rem;
     padding: 1rem 1.25rem;
   }

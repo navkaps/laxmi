@@ -44,8 +44,8 @@ module.exports = {
         },
       },
       fontFamily: {
-        sans: ["'Inter'", "system-ui", "sans-serif"],
-        display: ["'DM Serif Display'", "Georgia", "serif"],
+        sans: ["'Plus Jakarta Sans'", "system-ui", "sans-serif"],
+        display: ["'Plus Jakarta Sans'", "system-ui", "sans-serif"],
       },
       letterSpacing: {
         widest: "0.2em",
