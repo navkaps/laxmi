@@ -461,6 +461,7 @@ Holdings rules:
     recommendation.backtestData = generateBacktest(equityPct, bondPct, amplifier);
     recommendation.profileLevel = level;
     recommendation.allProfiles = allProfilesMeta;
+    recommendation.promptUsed = { system: systemPrompt, user: userPrompt };
 
     // Save to database
     try {

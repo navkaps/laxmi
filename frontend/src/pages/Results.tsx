@@ -43,6 +43,7 @@ const Results: React.FC = () => {
   const [recommendation, setRecommendation] = useState<PortfolioRecommendation | null>(null);
   const [tuneLevel, setTuneLevel] = useState<number>(2);
   const [error, setError] = useState<string | null>(null);
+  const [showPrompt, setShowPrompt] = useState(false);
 
   const fetchRecommendation = useCallback(
     (level: number, isInitial = false) => {
@@ -254,6 +255,49 @@ const Results: React.FC = () => {
       </div>
 
       <div className="max-w-5xl mx-auto px-10 mt-14 space-y-16">
+
+        {/* Prompt viewer */}
+        {recommendation?.promptUsed && (
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.05 }}>
+            <button
+              onClick={() => setShowPrompt((v) => !v)}
+              className="flex items-center gap-3 text-left group w-full"
+            >
+              <div className="flex items-center gap-2 text-white/35 hover:text-white/60 transition-colors">
+                <svg width="14" height="14" viewBox="0 0 14 14" fill="none" className="flex-shrink-0">
+                  <rect x="1" y="1" width="12" height="12" rx="2" stroke="currentColor" strokeWidth="1.2"/>
+                  <path d="M4 5h6M4 7h4" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round"/>
+                </svg>
+                <span className="font-sans text-xs tracking-widest uppercase">View AI prompt</span>
+                <svg width="10" height="10" viewBox="0 0 10 10" fill="none" className={`transition-transform duration-200 ${showPrompt ? "rotate-180" : ""}`}>
+                  <path d="M2 3.5l3 3 3-3" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
+              </div>
+            </button>
+
+            <AnimatePresence>
+              {showPrompt && (
+                <motion.div
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: "auto" }}
+                  exit={{ opacity: 0, height: 0 }}
+                  className="overflow-hidden"
+                >
+                  <div className="mt-4 border border-white/8 bg-white/2 p-6 space-y-5">
+                    <div>
+                      <p className="label-overline mb-2 opacity-50">System prompt</p>
+                      <p className="font-sans text-xs text-white/50 leading-relaxed whitespace-pre-wrap">{recommendation.promptUsed.system}</p>
+                    </div>
+                    <div className="border-t border-white/6 pt-5">
+                      <p className="label-overline mb-2 opacity-50">User prompt</p>
+                      <p className="font-sans text-xs text-white/50 leading-relaxed whitespace-pre-wrap">{recommendation.promptUsed.user}</p>
+                    </div>
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </motion.div>
+        )}
 
         {/* Key metrics */}
         <motion.div

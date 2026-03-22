@@ -76,4 +76,5 @@ export interface PortfolioRecommendation {
   backtestData: BacktestData[];
   profileLevel: number;
   allProfiles: TuneLevelSummary[];
+  promptUsed?: { system: string; user: string };
 }
