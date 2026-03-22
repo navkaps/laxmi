@@ -155,7 +155,8 @@ const Profiler: React.FC = () => {
       {/* Progress bar */}
       <div className="fixed top-0 left-0 right-0 h-0.5 bg-white/5 z-50">
         <motion.div
-          className="h-full bg-gold-500"
+          className="h-full"
+          style={{ background: "linear-gradient(to right, #6366F1, #8B5CF6)" }}
           animate={{ width: `${progress}%` }}
           transition={{ duration: 0.4, ease: "easeOut" }}
         />
@@ -170,10 +171,10 @@ const Profiler: React.FC = () => {
 
       {/* Logo */}
       <div className="fixed top-6 left-10 z-50 flex items-center gap-3">
-        <div className="w-6 h-6 border border-gold-500/60 flex items-center justify-center">
+        <div className="w-6 h-6 border border-gold-500/50 flex items-center justify-center" style={{ boxShadow: "0 0 10px rgba(99,102,241,0.3)" }}>
           <div className="w-1.5 h-1.5 bg-gold-500 rotate-45" />
         </div>
-        <span className="font-display text-base text-cream-50">Laxmi</span>
+        <span className="font-display text-base gradient-text">Laxmi</span>
       </div>
 
       {/* Main content */}
@@ -198,7 +199,7 @@ const Profiler: React.FC = () => {
               exit="exit"
               transition={{ duration: 0.3, ease: "easeInOut" }}
             >
-              <h2 className="font-display text-2xl sm:text-3xl md:text-4xl text-cream-50 mb-3 leading-tight">
+              <h2 className="font-display text-2xl sm:text-3xl md:text-4xl text-white mb-3 leading-tight">
                 {current === 0 && firstName
                   ? `${firstName}, how old are you?`
                   : question.question}

@@ -224,11 +224,13 @@ const Results: React.FC = () => {
       <div className="border-b border-white/5 py-16 px-10">
         <div className="max-w-5xl mx-auto">
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
-            <span className="label-overline opacity-40 block mb-4">
+            <span className="label-overline block mb-4 opacity-70">
               {userInfo?.name ? `${userInfo.name}'s Portfolio` : "Your Portfolio"}
             </span>
-            <h1 className="font-display text-3xl sm:text-4xl md:text-5xl text-cream-50 mb-4">{riskProfile} Strategy</h1>
-            <p className="text-cream-200/65 font-sans font-light text-base md:text-lg max-w-2xl leading-relaxed">
+            <h1 className="font-display text-3xl sm:text-4xl md:text-5xl text-white mb-4">
+              <span className="gradient-text">{riskProfile}</span> Strategy
+            </h1>
+            <p className="text-white/65 font-sans font-light text-base md:text-lg max-w-2xl leading-relaxed">
               {profileSummary}
             </p>
           </motion.div>
@@ -249,8 +251,8 @@ const Results: React.FC = () => {
             ...(projection && profile.timeline ? [{ label: `Projected value in ${profile.timeline} years`, value: projection }] : [{ label: "Portfolio Holdings", value: `${holdings.length} positions` }]),
           ].map((m) => (
             <div key={m.label} className="bg-navy-950 px-8 py-7">
-              <div className="label-overline opacity-40 mb-2">{m.label}</div>
-              <div className="font-display text-2xl md:text-3xl text-gold-400">{m.value}</div>
+              <div className="label-overline mb-2 opacity-70">{m.label}</div>
+              <div className="font-display text-2xl md:text-3xl gradient-text">{m.value}</div>
             </div>
           ))}
         </motion.div>
@@ -259,7 +261,8 @@ const Results: React.FC = () => {
         <motion.div
           initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.18 }}
-          className="border border-gold-500/20 bg-gold-500/3 p-8 no-print"
+          className="border border-gold-500/25 bg-gold-500/5 p-8 no-print"
+          style={{ boxShadow: "0 0 40px rgba(99,102,241,0.08)" }}
         >
           <div className="flex items-start justify-between mb-6">
             <div>
@@ -292,7 +295,7 @@ const Results: React.FC = () => {
             type="range" min={0} max={4} step={1} value={tuneLevel}
             onChange={(e) => handleTune(Number(e.target.value))}
             className="w-full mb-4"
-            style={{ background: `linear-gradient(to right, #C9A96E ${(tuneLevel / 4) * 100}%, rgba(201,169,110,0.15) ${(tuneLevel / 4) * 100}%)` }}
+            style={{ background: `linear-gradient(to right, #6366F1 ${(tuneLevel / 4) * 100}%, rgba(255,255,255,0.10) ${(tuneLevel / 4) * 100}%)` }}
           />
           <div className="flex justify-between">
             <span className="font-sans text-xs text-cream-200/20">Preserve capital</span>
@@ -321,7 +324,7 @@ const Results: React.FC = () => {
                   <div className="flex items-start justify-between mb-3">
                     <div className="flex items-center gap-4">
                       <div className="bg-navy-700/80 px-3 py-1 min-w-[60px] text-center">
-                        <span className="font-sans text-sm font-medium text-gold-400 tracking-wider">
+                        <span className="font-sans text-sm font-semibold tracking-wider gradient-text">
                           {h.ticker}
                         </span>
                       </div>
@@ -340,7 +343,8 @@ const Results: React.FC = () => {
                       initial={{ width: 0 }}
                       animate={{ width: `${h.allocation}%` }}
                       transition={{ delay: 0.3 + i * 0.06, duration: 0.7, ease: "easeOut" }}
-                      className="h-full bg-gold-500/70"
+                      className="h-full"
+                      style={{ background: "linear-gradient(to right, #6366F1, #8B5CF6)" }}
                     />
                   </div>
                   <p className="text-cream-200/65 font-sans text-xs leading-relaxed">{h.rationale}</p>
@@ -438,8 +442,8 @@ const Results: React.FC = () => {
                 <AreaChart data={backtestData}>
                   <defs>
                     <linearGradient id="pgGrad" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#C9A96E" stopOpacity={0.12} />
-                      <stop offset="95%" stopColor="#C9A96E" stopOpacity={0} />
+                      <stop offset="5%" stopColor="#6366F1" stopOpacity={0.2} />
+                      <stop offset="95%" stopColor="#6366F1" stopOpacity={0} />
                     </linearGradient>
                     <linearGradient id="bmGrad" x1="0" y1="0" x2="0" y2="1">
                       <stop offset="5%" stopColor="#ffffff" stopOpacity={0.04} />
@@ -469,7 +473,7 @@ const Results: React.FC = () => {
                   />
                   <Tooltip content={<CustomTooltip />} />
                   <Area type="monotone" dataKey="portfolioValue" name="This portfolio"
-                    stroke="#C9A96E" strokeWidth={1.5} fill="url(#pgGrad)" />
+                    stroke="#818CF8" strokeWidth={2} fill="url(#pgGrad)" />
                   <Area type="monotone" dataKey="benchmarkValue" name="S&P 500"
                     stroke="rgba(255,255,255,0.25)" strokeWidth={1}
                     fill="url(#bmGrad)" strokeDasharray="4 4" />

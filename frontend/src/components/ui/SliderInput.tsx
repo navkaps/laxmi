@@ -20,20 +20,18 @@ const SliderInput: React.FC<SliderInputProps> = ({
 
   return (
     <div className="w-full space-y-10">
-      {/* Value display */}
       <motion.div
         key={display}
-        initial={{ opacity: 0.6, y: 4 }}
+        initial={{ opacity: 0.5, y: 6 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.15 }}
         className="text-center"
       >
-        <span className="font-display text-5xl md:text-6xl text-gold-400 tracking-tight">
+        <span className="gradient-text font-display text-5xl md:text-6xl tracking-tight">
           {display}
         </span>
       </motion.div>
 
-      {/* Slider */}
       <div className="relative px-1">
         <label className="sr-only">Adjust value</label>
         <input
@@ -45,12 +43,12 @@ const SliderInput: React.FC<SliderInputProps> = ({
           onChange={(e) => onChange(Number(e.target.value))}
           className="w-full"
           style={{
-            background: `linear-gradient(to right, #C9A96E ${pct}%, rgba(255,255,255,0.08) ${pct}%)`,
+            background: `linear-gradient(to right, #6366F1 ${pct}%, rgba(255,255,255,0.10) ${pct}%)`,
           }}
         />
         <div className="flex justify-between mt-4">
-          <span className="font-sans text-xs text-cream-200/40">{minLabel}</span>
-          <span className="font-sans text-xs text-cream-200/40">{maxLabel}</span>
+          <span className="font-sans text-xs text-white/40">{minLabel}</span>
+          <span className="font-sans text-xs text-white/40">{maxLabel}</span>
         </div>
       </div>
     </div>

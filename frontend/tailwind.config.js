@@ -4,24 +4,43 @@ module.exports = {
   theme: {
     extend: {
       colors: {
+        // Deep purple-black backgrounds
         navy: {
-          950: "#04080F",
-          900: "#080E1A",
-          800: "#0C1426",
-          700: "#111D33",
-          600: "#162440",
+          950: "#07071A",
+          900: "#0B0B24",
+          800: "#10102E",
+          700: "#15153A",
+          600: "#1A1A4A",
         },
+        // Electric indigo — primary UI accent
         gold: {
-          300: "#E8D5A3",
-          400: "#D4B87A",
-          500: "#C9A96E",
-          600: "#B8934A",
-          700: "#9A7A38",
+          300: "#A5B4FC",
+          400: "#818CF8",
+          500: "#6366F1",
+          600: "#4F46E5",
+          700: "#4338CA",
         },
+        // Text / cream → clean white-grey
         cream: {
-          50: "#FDFAF4",
-          100: "#FAF5E9",
-          200: "#F5EDDA",
+          50: "#FFFFFF",
+          100: "#F1F5F9",
+          200: "#CBD5E1",
+        },
+        // Violet for gradient mid
+        violet: {
+          400: "#A78BFA",
+          500: "#8B5CF6",
+        },
+        // Rose for gradient end + danger
+        rose: {
+          400: "#FB7185",
+          500: "#F43F5E",
+        },
+        // Warm amber — used ONLY for financial numbers/data
+        amber: {
+          300: "#FCD34D",
+          400: "#FBBF24",
+          500: "#F59E0B",
         },
       },
       fontFamily: {
@@ -35,6 +54,7 @@ module.exports = {
         "fade-up": "fadeUp 0.6s ease-out forwards",
         "fade-in": "fadeIn 0.4s ease-out forwards",
         shimmer: "shimmer 2s infinite",
+        "pulse-glow": "pulseGlow 3s ease-in-out infinite",
       },
       keyframes: {
         fadeUp: {
@@ -48,6 +68,10 @@ module.exports = {
         shimmer: {
           "0%": { backgroundPosition: "-200% 0" },
           "100%": { backgroundPosition: "200% 0" },
+        },
+        pulseGlow: {
+          "0%, 100%": { opacity: "0.4" },
+          "50%": { opacity: "0.7" },
         },
       },
     },

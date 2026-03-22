@@ -89,9 +89,12 @@ const UserInfoPage: React.FC = () => {
 
       <div className="w-full max-w-md">
         <motion.div initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }}>
-          <span className="label-overline opacity-35 block mb-5">Before we begin</span>
-          <h1 className="font-display text-3xl sm:text-4xl text-cream-50 mb-3 leading-tight">Where are you investing?</h1>
-          <p className="text-cream-200/65 font-sans text-sm leading-relaxed mb-12">
+          <span className="label-overline block mb-5">Before we begin</span>
+          <h1 className="font-display text-3xl sm:text-4xl mb-3 leading-tight">
+            <span className="gradient-text">Where are you</span>
+            <span className="text-white"> investing?</span>
+          </h1>
+          <p className="text-white/65 font-sans text-sm leading-relaxed mb-12">
             Your country determines which markets, instruments, and tax structures we recommend.
           </p>
 
@@ -111,13 +114,14 @@ const UserInfoPage: React.FC = () => {
                     }}
                     className={`flex items-center gap-3 px-4 py-3 border text-left transition-all duration-200 ${
                       info.country === c.code
-                        ? "border-gold-500 bg-gold-500/10"
-                        : "border-white/15 bg-navy-800/30 hover:border-white/30"
+                        ? "border-gold-500/60 bg-gold-500/10"
+                        : "border-white/12 bg-white/3 hover:border-white/25 hover:bg-white/5"
                     }`}
+                    style={info.country === c.code ? { boxShadow: "0 0 16px rgba(99,102,241,0.15)" } : {}}
                   >
                     <span className="text-xl leading-none">{c.flag}</span>
-                    <span className={`font-sans text-sm transition-colors ${
-                      info.country === c.code ? "text-cream-50" : "text-cream-200/65"
+                    <span className={`font-sans text-sm font-medium transition-colors ${
+                      info.country === c.code ? "text-white" : "text-white/65"
                     }`}>{c.name}</span>
                   </motion.button>
                 ))}
@@ -141,10 +145,10 @@ const UserInfoPage: React.FC = () => {
                   )}
                 </div>
                 <div>
-                  <p className="font-sans text-sm text-cream-200/70 group-hover:text-cream-100 transition-colors">
+                  <p className="font-sans text-sm text-white/65 group-hover:text-white transition-colors font-medium">
                     I already have investments
                   </p>
-                  <p className="font-sans text-xs text-cream-200/28 mt-0.5 leading-relaxed">
+                  <p className="font-sans text-xs text-white/40 mt-0.5 leading-relaxed">
                     Optional — we'll show you exactly what to sell, keep, and buy to reach your ideal portfolio
                   </p>
                 </div>
