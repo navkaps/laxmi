@@ -441,12 +441,17 @@ Holdings rules:
   try {
     const message = await anthropic.messages.create({
       model: "claude-opus-4-6",
-      max_tokens: 2000,
+      max_tokens: 4096,
       messages: [{ role: "user", content: userPrompt }],
       system: systemPrompt,
     });
 
-    const raw = message.content[0].text.trim().replace(/^```(?:json)?\n?/, "").replace(/\n?```$/, "");
+    const rawText = message.content[0].text.trim();
+    // Extract JSON robustly — find outermost { ... }
+    const jsonStart = rawText.indexOf("{");
+    const jsonEnd = rawText.lastIndexOf("}");
+    if (jsonStart === -1 || jsonEnd === -1) throw new Error("No JSON object found in Claude response");
+    const raw = rawText.slice(jsonStart, jsonEnd + 1);
     const recommendation = JSON.parse(raw);
 
     // Attach backtest data using equity/bond split inferred from holdings
