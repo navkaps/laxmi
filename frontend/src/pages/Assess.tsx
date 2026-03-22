@@ -61,7 +61,7 @@ const Assess: React.FC = () => {
     const formData = new FormData();
     formData.append("file", f);
     try {
-      const res = await axios.post("${process.env.REACT_APP_API_URL}/api/parse-portfolio", formData, {
+      const res = await axios.post(`${process.env.REACT_APP_API_URL}/api/parse-portfolio`, formData, {
         headers: { "Content-Type": "multipart/form-data" },
       });
       if (res.data.requiresAI) {
@@ -81,7 +81,7 @@ const Assess: React.FC = () => {
   const handleAssess = async (holdings: ParsedHolding[]) => {
     setAssessing(true);
     try {
-      const res = await axios.post("${process.env.REACT_APP_API_URL}/api/assess", { holdings });
+      const res = await axios.post(`${process.env.REACT_APP_API_URL}/api/assess`, { holdings });
       setAssessment(res.data);
     } catch {
       // silent
