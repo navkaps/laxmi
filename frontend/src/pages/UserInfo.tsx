@@ -21,7 +21,7 @@ const UserInfoPage: React.FC = () => {
   const fileRef = useRef<HTMLInputElement>(null);
 
   const [info, setInfo] = useState<UserInfo>({ name: "", email: "", phone: "", country: "" });
-  const [errors, setErrors] = useState<Partial<Record<keyof UserInfo, string>>>({});
+  const [errors, setErrors] = useState<{ country?: string }>({});
   const [showPortfolio, setShowPortfolio] = useState(false);
   const [currentHoldings, setCurrentHoldings] = useState<CurrentHolding[]>([]);
   const [uploading, setUploading] = useState(false);
@@ -59,10 +59,7 @@ const UserInfoPage: React.FC = () => {
   };
 
   const validate = () => {
-    const e: Partial<Record<keyof UserInfo, string>> = {};
-    if (!info.name.trim()) e.name = "Required";
-    if (!info.email.trim() || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(info.email))
-      e.email = "Enter a valid email address";
+    const e: { country?: string } = {};
     if (!info.country) e.country = "Please select your country";
     return e;
   };
@@ -80,25 +77,6 @@ const UserInfoPage: React.FC = () => {
     });
   };
 
-  const field = (id: "name" | "email" | "phone", label: string, placeholder: string, type = "text") => (
-    <div className="space-y-2">
-      <label className="label-overline opacity-40">{label}</label>
-      <input
-        type={type}
-        value={info[id]}
-        onChange={(e) => {
-          setInfo((p) => ({ ...p, [id]: e.target.value }));
-          setErrors((p) => ({ ...p, [id]: undefined }));
-        }}
-        placeholder={placeholder}
-        className={`w-full bg-transparent border-b ${
-          errors[id] ? "border-red-400/50" : "border-white/12"
-        } py-3 font-sans text-base text-cream-50 placeholder:text-cream-200/18 focus:outline-none focus:border-gold-500/50 transition-colors`}
-      />
-      {errors[id] && <p className="text-red-400/60 font-sans text-xs">{errors[id]}</p>}
-    </div>
-  );
-
   return (
     <div className="min-h-screen bg-navy-950 flex flex-col items-center justify-center px-6 py-16">
       {/* Logo */}
@@ -112,16 +90,12 @@ const UserInfoPage: React.FC = () => {
       <div className="w-full max-w-md">
         <motion.div initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }}>
           <span className="label-overline opacity-35 block mb-5">Before we begin</span>
-          <h1 className="font-display text-4xl text-cream-50 mb-3 leading-tight">Tell us who you are.</h1>
+          <h1 className="font-display text-4xl text-cream-50 mb-3 leading-tight">Where are you investing?</h1>
           <p className="text-cream-200/35 font-sans text-sm leading-relaxed mb-12">
-            Your profile and recommendation will be saved so we can personalise your experience.
+            Your country determines which markets, instruments, and tax structures we recommend.
           </p>
 
           <div className="space-y-8">
-            {field("name", "Full name", "Jane Smith")}
-            {field("email", "Email address", "jane@example.com", "email")}
-            {field("phone", "Phone number (optional)", "+1 555 000 0000", "tel")}
-
             {/* Country */}
             <div className="space-y-3">
               <label className="label-overline opacity-40 block">Country</label>
@@ -266,9 +240,6 @@ const UserInfoPage: React.FC = () => {
             Continue to your profile →
           </button>
 
-          <p className="text-cream-200/18 font-sans text-xs mt-6 text-center leading-relaxed">
-            Your information is stored securely and never shared or sold.
-          </p>
         </motion.div>
       </div>
     </div>
