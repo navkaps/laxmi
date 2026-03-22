@@ -170,7 +170,17 @@ const Profiler: React.FC = () => {
       </div>
 
       {/* Logo */}
-      <div className="fixed top-6 left-10 z-50 flex items-center gap-2">
+      {/* Logo — Option C: gradient circle monogram */}
+      <div className="fixed top-6 left-10 z-50 flex items-center gap-3">
+        <svg width="28" height="28" viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <linearGradient id="g-c" x1="0" y1="0" x2="28" y2="28" gradientUnits="userSpaceOnUse">
+              <stop stopColor="#818CF8"/><stop offset="1" stopColor="#C084FC"/>
+            </linearGradient>
+          </defs>
+          <circle cx="14" cy="14" r="13" fill="url(#g-c)"/>
+          <path d="M10 7 L10 21 L18 21" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
+        </svg>
         <span className="font-display text-lg font-bold tracking-tight gradient-text">Laxmi</span>
         <span className="hidden sm:inline font-sans text-xs text-white/25 tracking-wide border-l border-white/10 pl-2 ml-1">Your AI wealth advisor</span>
       </div>

@@ -78,8 +78,18 @@ const Home: React.FC = () => {
       <div className="absolute top-1/4 left-1/3 w-96 h-96 bg-violet-600/6 rounded-full blur-3xl pointer-events-none" />
       <div className="absolute bottom-1/4 right-1/4 w-64 h-64 bg-indigo-500/6 rounded-full blur-3xl pointer-events-none" />
 
-      {/* Logo */}
-      <div className="absolute top-6 left-10 flex items-center gap-2">
+      {/* Logo — Option A: stroke L with growth tick */}
+      <div className="absolute top-6 left-10 flex items-center gap-3">
+        <svg width="28" height="26" viewBox="0 0 28 26" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <linearGradient id="g-a" x1="0" y1="0" x2="28" y2="26" gradientUnits="userSpaceOnUse">
+              <stop stopColor="#6366F1"/><stop offset="1" stopColor="#A78BFA"/>
+            </linearGradient>
+          </defs>
+          <line x1="6" y1="3" x2="6" y2="23" stroke="url(#g-a)" strokeWidth="2.5" strokeLinecap="round"/>
+          <line x1="6" y1="23" x2="19" y2="23" stroke="url(#g-a)" strokeWidth="2.5" strokeLinecap="round"/>
+          <path d="M14 18 L19 23 L24 14" stroke="url(#g-a)" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" fillOpacity="0" opacity="0.65"/>
+        </svg>
         <span className="font-display text-lg font-bold tracking-tight gradient-text">Laxmi</span>
         <span className="hidden sm:inline font-sans text-xs text-white/25 tracking-wide border-l border-white/10 pl-2 ml-1">Your AI wealth advisor</span>
       </div>

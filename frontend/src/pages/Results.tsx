@@ -221,7 +221,16 @@ const Results: React.FC = () => {
   return (
     <div className="min-h-screen bg-navy-950 pb-24">
       {/* Logo */}
-      <div className="fixed top-6 left-10 z-50 flex items-center gap-2">
+      {/* Logo — Option D: ascending staircase mark */}
+      <div className="fixed top-6 left-10 z-50 flex items-center gap-3">
+        <svg width="30" height="24" viewBox="0 0 30 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <linearGradient id="g-d" x1="0" y1="24" x2="30" y2="0" gradientUnits="userSpaceOnUse">
+              <stop stopColor="#6366F1"/><stop offset="1" stopColor="#FB7185"/>
+            </linearGradient>
+          </defs>
+          <path d="M2 22 L2 16 L10 16 L10 10 L18 10 L18 4 L28 4" stroke="url(#g-d)" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"/>
+        </svg>
         <span className="font-display text-lg font-bold tracking-tight gradient-text">Laxmi</span>
         <span className="hidden sm:inline font-sans text-xs text-white/25 tracking-wide border-l border-white/10 pl-2 ml-1">Your AI wealth advisor</span>
       </div>
