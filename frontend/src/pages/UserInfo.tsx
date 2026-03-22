@@ -81,10 +81,15 @@ const UserInfoPage: React.FC = () => {
     <div className="min-h-screen bg-navy-950 flex flex-col items-center justify-center px-6 py-16">
       {/* Logo */}
       <div className="fixed top-6 left-10 flex items-center gap-3">
-        <div className="w-6 h-6 border border-gold-500/60 flex items-center justify-center">
-          <div className="w-1.5 h-1.5 bg-gold-500 rotate-45" />
+        <svg width="20" height="16" viewBox="0 0 20 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <rect x="0" y="10" width="4" height="6" rx="0.5" fill="#6366F1" fillOpacity="0.45"/>
+          <rect x="8" y="5" width="4" height="11" rx="0.5" fill="#818CF8" fillOpacity="0.7"/>
+          <rect x="16" y="0" width="4" height="16" rx="0.5" fill="#A5B4FC"/>
+        </svg>
+        <div>
+          <span className="font-display text-base gradient-text">Laxmi</span>
+          <span className="hidden sm:inline font-sans text-xs text-white/30 ml-2 tracking-wide">Your AI wealth advisor</span>
         </div>
-        <span className="font-display text-base text-cream-50">Laxmi</span>
       </div>
 
       <div className="w-full max-w-md">

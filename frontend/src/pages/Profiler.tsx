@@ -171,10 +171,15 @@ const Profiler: React.FC = () => {
 
       {/* Logo */}
       <div className="fixed top-6 left-10 z-50 flex items-center gap-3">
-        <div className="w-6 h-6 border border-gold-500/50 flex items-center justify-center" style={{ boxShadow: "0 0 10px rgba(99,102,241,0.3)" }}>
-          <div className="w-1.5 h-1.5 bg-gold-500 rotate-45" />
+        <svg width="20" height="16" viewBox="0 0 20 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <rect x="0" y="10" width="4" height="6" rx="0.5" fill="#6366F1" fillOpacity="0.45"/>
+          <rect x="8" y="5" width="4" height="11" rx="0.5" fill="#818CF8" fillOpacity="0.7"/>
+          <rect x="16" y="0" width="4" height="16" rx="0.5" fill="#A5B4FC"/>
+        </svg>
+        <div>
+          <span className="font-display text-base gradient-text">Laxmi</span>
+          <span className="hidden sm:inline font-sans text-xs text-white/30 ml-2 tracking-wide">Your AI wealth advisor</span>
         </div>
-        <span className="font-display text-base gradient-text">Laxmi</span>
       </div>
 
       {/* Main content */}
