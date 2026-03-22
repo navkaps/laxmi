@@ -361,6 +361,20 @@ export const questions: Question[] = [
     ],
   },
   {
+    id: "investment_style",
+    category: "Preferences",
+    question: "Do you prefer ETFs, individual stocks, or no preference?",
+    subtext: "ETFs are diversified and lower maintenance. Individual stocks can outperform but require more conviction and carry more risk.",
+    type: "single",
+    options: [
+      { value: "etfs_only", label: "ETFs only", description: "Broad diversification, low fees, set and forget" },
+      { value: "mostly_etfs", label: "Mostly ETFs, some stocks", description: "Core ETF portfolio with a few individual picks" },
+      { value: "mix", label: "Equal mix", description: "Open to both in roughly equal measure" },
+      { value: "mostly_stocks", label: "Mostly individual stocks", description: "Stock picking with some ETF exposure for diversification" },
+      { value: "no_preference", label: "No preference", description: "Let the data decide — whatever gives the best risk-adjusted return" },
+    ],
+  },
+  {
     id: "wishlist",
     category: "Preferences",
     question: "Anything specific you want — or want to avoid?",

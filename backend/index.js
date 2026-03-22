@@ -421,6 +421,7 @@ CLIENT PROFILE
 ${profile.wishlist ? `- Client wishlist / hard exclusions (MUST be honoured): ${profile.wishlist}` : ""}
 ${profile.focus_areas?.length ? `- Preferred sectors: ${profile.focus_areas.join(", ")}` : ""}
 ${profile.avoid_areas?.length ? `- Sectors / instruments to exclude: ${profile.avoid_areas.join(", ")}` : ""}
+${profile.investment_style ? `- ETF vs stocks preference: ${{ etfs_only: "ETFs only — no individual stocks", mostly_etfs: "Mostly ETFs with some individual stock picks", mix: "Equal mix of ETFs and individual stocks", mostly_stocks: "Mostly individual stocks with some ETF exposure", no_preference: "No preference — optimise purely for risk-adjusted return" }[profile.investment_style] || profile.investment_style}` : ""}
 
 YOUR TASK
 =========
