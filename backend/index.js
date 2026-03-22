@@ -388,65 +388,82 @@ app.post("/api/recommend", async (req, res) => {
   const level = tuneLevel !== undefined && tuneLevel !== null ? Math.max(0, Math.min(4, tuneLevel)) : profileLevel;
   const riskLabel = allProfilesMeta[level].riskProfile;
 
-  const systemPrompt = `You are Laxmi, a sharp and empathetic AI financial advisor. You generate deeply personalized investment portfolio recommendations — not generic templates. Every response must reflect the specific investor's profile, goals, age, and behavior.
+  const sym = isIndia ? "₹" : "$";
+  const initialAmt = profile.initial_amount ? `${sym}${Number(profile.initial_amount).toLocaleString()}` : "not specified";
+  const monthlyAmt = profile.monthly_contribution != null ? (Number(profile.monthly_contribution) === 0 ? "none" : `${sym}${Number(profile.monthly_contribution).toLocaleString()}/month`) : "not specified";
+  const targetAmt = profile.target_value ? `${sym}${Number(profile.target_value).toLocaleString()}` : "not specified";
 
-You always respond with a single valid JSON object. No markdown, no commentary, only the JSON.`;
+  const systemPrompt = `You are Laxmi, a top-tier AI financial advisor specialising in personalised wealth management for clients across all net worth levels. You think like a senior private banker — rigorous, specific, and deeply empathetic to each client's unique situation.
 
-  const userPrompt = `Generate a personalized investment portfolio recommendation for this investor:
+Your recommendations are never generic. Every portfolio, every holding, every piece of advice is calibrated to the exact numbers, constraints, and goals this specific client has shared. You address debt, emergency funds, income stability, and tax-advantaged accounts as first-class considerations — not afterthoughts.
 
-Profile:
+You always respond with a single valid JSON object. No markdown, no preamble, no commentary outside the JSON.`;
+
+  const userPrompt = `Act as a top-tier financial advisor managing the following client. Analyse their full situation and generate a deeply personalised portfolio recommendation.
+
+CLIENT PROFILE
+==============
 - Age: ${profile.age}
 - Country: ${isIndia ? "India" : "United States"}
-- Goal: ${profile.goal}
+- Primary goal: ${profile.goal || "not specified"}
 - Investment timeline: ${profile.timeline ? `${profile.timeline} years` : "not specified"}
-- Initial investment amount: ${profile.initial_amount ? `${isIndia ? "₹" : "$"}${Number(profile.initial_amount).toLocaleString()}` : "not specified"}
-- Monthly contribution: ${profile.monthly_contribution != null ? (Number(profile.monthly_contribution) === 0 ? "none" : `${isIndia ? "₹" : "$"}${Number(profile.monthly_contribution).toLocaleString()}/month`) : "not specified"}
-- Target portfolio value: ${profile.target_value ? `${isIndia ? "₹" : "$"}${Number(profile.target_value).toLocaleString()}` : "not specified"}
-- Emergency fund status: ${profile.emergency_fund || "not specified"}
-- Existing high-interest debt: ${profile.existing_debt || "not specified"}
+- Portfolio size (initial): ${initialAmt}
+- Monthly contribution: ${monthlyAmt}
+- Target portfolio value: ${targetAmt}
+- Emergency fund: ${profile.emergency_fund === "yes_full" ? "Fully funded (3–6 months)" : profile.emergency_fund === "yes_partial" ? "Partially funded" : profile.emergency_fund === "no" ? "NOT funded — critical gap" : "not specified"}
+- High-interest debt: ${profile.existing_debt === "none" ? "None" : profile.existing_debt === "some" ? "Some debt present" : profile.existing_debt === "significant" ? "SIGNIFICANT debt — must be addressed" : "not specified"}
 - Income stability: ${profile.income_stability || "not specified"}
 - Account type: ${profile.account_type || "not specified"}
-- Risk appetite (self-described): ${profile.risk_visual}
-- Crash behavior: ${profile.crash_behavior}
-- Max acceptable loss: ${profile.max_loss}%
-- Target risk level: ${riskLabel} (level ${level} of 4)
-${profile.wishlist ? `- Specific wishlist / exclusions (MUST be honoured): ${profile.wishlist}` : ""}
-${profile.focus_areas?.length ? `- Sectors to lean into: ${profile.focus_areas.join(", ")}` : ""}
-${profile.avoid_areas?.length ? `- Sectors/instruments to exclude: ${profile.avoid_areas.join(", ")}` : ""}
+- Risk appetite: ${profile.risk_visual || "not specified"}
+- Crash behaviour: ${profile.crash_behavior || "not specified"}
+- Max acceptable loss: ${profile.max_loss ? `${profile.max_loss}%` : "not specified"}
+- Assigned risk level: ${riskLabel} (${level} of 4)
+${profile.wishlist ? `- Client wishlist / hard exclusions (MUST be honoured): ${profile.wishlist}` : ""}
+${profile.focus_areas?.length ? `- Preferred sectors: ${profile.focus_areas.join(", ")}` : ""}
+${profile.avoid_areas?.length ? `- Sectors / instruments to exclude: ${profile.avoid_areas.join(", ")}` : ""}
 
-Return a JSON object with exactly these fields:
+YOUR TASK
+=========
+1. Recommend a specific asset allocation across equities, fixed income, alternatives, and cash
+2. Select 5–8 individual holdings (${isIndia ? "NSE/BSE tickers" : "US tickers"}) with allocations summing to exactly 100
+3. For each holding explain exactly why it fits THIS client's numbers and constraints
+4. Address debt repayment strategy if applicable
+5. Address emergency fund gap if applicable
+6. Include income generation potential if goal is income/preservation
+7. Provide honest risk considerations specific to this client
+
+CRITICAL RULES
+==============
+- If emergency_fund is NOT funded: reduce risk by one level and flag urgency in considerations
+- If debt is SIGNIFICANT: top consideration must address paying it down vs investing
+- If income is variable: increase liquidity buffer, favour income-generating assets
+- If target value is already met or close: shift to preservation over growth
+- If timeline < 5 years: be conservative regardless of stated risk appetite
+- Account type matters: Roth IRA → prioritise highest-growth tax-free assets; 401k → reflect fund menu constraints; Demat → apply Indian LTCG/STCG rules
+- Large portfolios (${sym}500K+) should diversify more broadly than small ones
+- Do NOT use generic templates. Every sentence must reflect this client's specific numbers.
+
+Return ONLY this JSON object:
 {
   "riskProfile": "${riskLabel}",
   "profileLevel": ${level},
   "expectedAnnualReturn": "e.g. 7–10% p.a.",
   "volatility": "e.g. Moderate (12–18%)",
-  "profileSummary": "2–3 sentence paragraph describing this specific investor and why this portfolio suits them. Make it feel personal.",
-  "rationale": "2–3 sentence paragraph explaining the portfolio construction logic.",
-  "keyStrengths": ["3 specific strengths of this portfolio for this investor"],
-  "considerations": ["3 honest risks or caveats for this specific investor"],
+  "profileSummary": "3–4 sentences. Address the client's specific situation, constraints, and why this portfolio is the right fit. Make it feel like it was written for them personally.",
+  "rationale": "3–4 sentences explaining the construction logic — asset class choices, weighting rationale, and how the constraints above shaped the portfolio.",
+  "keyStrengths": ["4 specific strengths — each tied to a number or constraint from this client's profile"],
+  "considerations": ["4 honest, specific risks or action items — debt, emergency fund, concentration risk, tax, etc."],
   "holdings": [
     {
-      "ticker": "${isIndia ? "e.g. NIFTYBEES" : "e.g. VTI"}",
+      "ticker": "e.g. ${isIndia ? "NIFTYBEES" : "VTI"}",
       "name": "Full fund or stock name",
-      "type": "ETF or Stock or Bond",
+      "type": "ETF or Stock or Bond or REIT or Cash",
       "allocation": 25,
       "sector": "Sector name",
-      "rationale": "1 sentence specific to this investor's situation"
+      "rationale": "1–2 sentences specific to this client's numbers, goal, and constraints"
     }
   ]
-}
-
-Holdings rules:
-- Use ${isIndia ? "Indian market tickers (NSE/BSE)" : "US market tickers"}.
-- Allocations must sum to exactly 100.
-- Include 5–8 holdings appropriate for the ${riskLabel} risk level.
-- Account type matters: if account_type is roth_ira put highest-growth assets there; if 401k reflect limited fund selection; if demat reflect Indian tax rules (LTCG/STCG); etc.
-- Initial amount and monthly contribution matter: small amounts should favour low-cost broad ETFs over individual stocks; large amounts can diversify more.
-- Timeline matters: short timelines (<5 years) need more conservative positioning regardless of risk appetite.
-- Income stability matters: variable/entrepreneurial income needs more liquidity buffer than stable salaried income.
-- Emergency fund matters: if emergency_fund is "no", reduce aggressiveness by one level and flag this in considerations.
-- Existing debt matters: if existing_debt is "significant", note in considerations that high-interest debt repayment should be prioritised alongside investing.
-- Vary holdings and rationale based on ALL the profile data above. Do NOT use generic templates.`;
+}`;
 
   try {
     const message = await anthropic.messages.create({

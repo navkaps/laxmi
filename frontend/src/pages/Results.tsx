@@ -263,18 +263,16 @@ const Results: React.FC = () => {
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.05 }}>
             <button
               onClick={() => setShowPrompt((v) => !v)}
-              className="flex items-center gap-3 text-left group w-full"
+              className="flex items-center gap-2 text-white/30 hover:text-white/55 transition-colors group"
             >
-              <div className="flex items-center gap-2 text-white/35 hover:text-white/60 transition-colors">
-                <svg width="14" height="14" viewBox="0 0 14 14" fill="none" className="flex-shrink-0">
-                  <rect x="1" y="1" width="12" height="12" rx="2" stroke="currentColor" strokeWidth="1.2"/>
-                  <path d="M4 5h6M4 7h4" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round"/>
-                </svg>
-                <span className="font-sans text-xs tracking-widest uppercase">View AI prompt</span>
-                <svg width="10" height="10" viewBox="0 0 10 10" fill="none" className={`transition-transform duration-200 ${showPrompt ? "rotate-180" : ""}`}>
-                  <path d="M2 3.5l3 3 3-3" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/>
-                </svg>
-              </div>
+              <svg width="13" height="13" viewBox="0 0 13 13" fill="none" className="flex-shrink-0">
+                <rect x="0.5" y="0.5" width="12" height="12" rx="2" stroke="currentColor" strokeWidth="1"/>
+                <path d="M3 4.5h7M3 6.5h5" stroke="currentColor" strokeWidth="1" strokeLinecap="round"/>
+              </svg>
+              <span className="font-sans text-xs tracking-widest uppercase">{showPrompt ? "Hide" : "View"} AI prompt</span>
+              <svg width="9" height="9" viewBox="0 0 9 9" fill="none" className={`transition-transform duration-200 ${showPrompt ? "rotate-180" : ""}`}>
+                <path d="M1.5 3l3 3 3-3" stroke="currentColor" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
             </button>
 
             <AnimatePresence>
@@ -285,14 +283,14 @@ const Results: React.FC = () => {
                   exit={{ opacity: 0, height: 0 }}
                   className="overflow-hidden"
                 >
-                  <div className="mt-4 border border-white/8 bg-white/2 p-6 space-y-5">
-                    <div>
-                      <p className="label-overline mb-2 opacity-50">System prompt</p>
-                      <p className="font-sans text-xs text-white/50 leading-relaxed whitespace-pre-wrap">{recommendation.promptUsed.system}</p>
+                  <div className="mt-5 border border-white/6 bg-white/[0.02] divide-y divide-white/6">
+                    <div className="px-6 py-5">
+                      <p className="label-overline text-xs mb-3 opacity-40">System prompt</p>
+                      <p className="font-sans text-xs text-white/40 leading-relaxed whitespace-pre-wrap">{recommendation.promptUsed.system}</p>
                     </div>
-                    <div className="border-t border-white/6 pt-5">
-                      <p className="label-overline mb-2 opacity-50">User prompt</p>
-                      <p className="font-sans text-xs text-white/50 leading-relaxed whitespace-pre-wrap">{recommendation.promptUsed.user}</p>
+                    <div className="px-6 py-5">
+                      <p className="label-overline text-xs mb-3 opacity-40">User prompt</p>
+                      <p className="font-sans text-xs text-white/40 leading-relaxed whitespace-pre-wrap">{recommendation.promptUsed.user}</p>
                     </div>
                   </div>
                 </motion.div>
