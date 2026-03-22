@@ -175,7 +175,7 @@ const Profiler: React.FC = () => {
         <svg width="28" height="28" viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
           <defs>
             <linearGradient id="g-logo" x1="0" y1="0" x2="28" y2="28" gradientUnits="userSpaceOnUse">
-              <stop stopColor="#6366F1"/><stop offset="1" stopColor="#7C3AED"/>
+              <stop stopColor="#D4A843"/><stop offset="1" stopColor="#A07A35"/>
             </linearGradient>
           </defs>
           <rect width="28" height="28" rx="6" fill="url(#g-logo)"/>

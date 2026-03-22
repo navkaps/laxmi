@@ -4,39 +4,37 @@ module.exports = {
   theme: {
     extend: {
       colors: {
-        // Deep purple-black backgrounds
+        // True black backgrounds
         navy: {
-          950: "#07071A",
-          900: "#0B0B24",
-          800: "#10102E",
-          700: "#15153A",
-          600: "#1A1A4A",
+          950: "#080808",
+          900: "#0F0F0F",
+          800: "#171717",
+          700: "#1F1F1F",
+          600: "#272727",
         },
-        // Electric indigo — primary UI accent
+        // Warm gold — primary accent
         gold: {
-          300: "#A5B4FC",
-          400: "#818CF8",
-          500: "#6366F1",
-          600: "#4F46E5",
-          700: "#4338CA",
+          300: "#EDD28A",
+          400: "#D4A843",
+          500: "#C9A96E",
+          600: "#A07A35",
+          700: "#7A5A22",
         },
-        // Text / cream → clean white-grey
+        // Text
         cream: {
           50: "#FFFFFF",
-          100: "#F1F5F9",
-          200: "#CBD5E1",
+          100: "#F5F0E8",
+          200: "#C8BEA8",
         },
-        // Violet for gradient mid
+        // Keep these for error states only
         violet: {
           400: "#A78BFA",
           500: "#8B5CF6",
         },
-        // Rose for gradient end + danger
         rose: {
           400: "#FB7185",
           500: "#F43F5E",
         },
-        // Warm amber — used ONLY for financial numbers/data
         amber: {
           300: "#FCD34D",
           400: "#FBBF24",

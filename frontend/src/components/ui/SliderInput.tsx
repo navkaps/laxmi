@@ -43,7 +43,7 @@ const SliderInput: React.FC<SliderInputProps> = ({
           onChange={(e) => onChange(Number(e.target.value))}
           className="w-full"
           style={{
-            background: `linear-gradient(to right, #6366F1 ${pct}%, rgba(255,255,255,0.10) ${pct}%)`,
+            background: `linear-gradient(to right, #C9A96E ${pct}%, rgba(255,255,255,0.10) ${pct}%)`,
           }}
         />
         <div className="flex justify-between mt-4">

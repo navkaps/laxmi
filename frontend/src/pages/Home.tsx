@@ -43,7 +43,7 @@ const Home: React.FC = () => {
             ctx.beginPath();
             ctx.moveTo(p.x, p.y);
             ctx.lineTo(q.x, q.y);
-            ctx.strokeStyle = `rgba(99, 102, 241, ${0.08 * (1 - dist / 150)})`;
+            ctx.strokeStyle = `rgba(201, 169, 110, ${0.07 * (1 - dist / 150)})`;
             ctx.lineWidth = 0.5;
             ctx.stroke();
           }
@@ -51,7 +51,7 @@ const Home: React.FC = () => {
 
         ctx.beginPath();
         ctx.arc(p.x, p.y, 1, 0, Math.PI * 2);
-        ctx.fillStyle = `rgba(129, 140, 248, ${p.alpha})`;
+        ctx.fillStyle = `rgba(201, 169, 110, ${p.alpha})`;
         ctx.fill();
       });
       animId = requestAnimationFrame(draw);
@@ -83,7 +83,7 @@ const Home: React.FC = () => {
         <svg width="28" height="28" viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
           <defs>
             <linearGradient id="g-logo" x1="0" y1="0" x2="28" y2="28" gradientUnits="userSpaceOnUse">
-              <stop stopColor="#6366F1"/><stop offset="1" stopColor="#7C3AED"/>
+              <stop stopColor="#D4A843"/><stop offset="1" stopColor="#A07A35"/>
             </linearGradient>
           </defs>
           <rect width="28" height="28" rx="6" fill="url(#g-logo)"/>
