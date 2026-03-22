@@ -203,6 +203,30 @@ export const questions: Question[] = [
     },
   },
   {
+    id: "emergency_fund",
+    category: "Financial Profile",
+    question: "Do you have an emergency fund?",
+    subtext: "3–6 months of living expenses in cash or a savings account — before investing. This protects your portfolio from forced selling at the worst time.",
+    type: "single",
+    options: [
+      { value: "yes_full", label: "Yes — 6+ months covered", description: "Fully protected. You can invest without worrying about needing to sell." },
+      { value: "yes_partial", label: "Partially — 1–3 months", description: "Some buffer, but consider building this before taking on more risk." },
+      { value: "no", label: "No emergency fund yet", description: "We'll factor this in — high-volatility portfolios aren't appropriate until this is in place." },
+    ],
+  },
+  {
+    id: "existing_debt",
+    category: "Financial Profile",
+    question: "Do you carry any high-interest debt?",
+    subtext: "Credit cards, personal loans, or any debt above 8% interest. Paying these off first is often the best guaranteed return available.",
+    type: "single",
+    options: [
+      { value: "none", label: "No high-interest debt", description: "Clear to invest freely." },
+      { value: "some", label: "Some debt (manageable)", description: "Under control — investing alongside repayment makes sense." },
+      { value: "significant", label: "Significant debt (>8% interest)", description: "We'll flag this — paying it down first may beat most investment returns." },
+    ],
+  },
+  {
     id: "income_stability",
     category: "Financial Profile",
     question: "How stable is your income?",

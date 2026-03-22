@@ -392,6 +392,8 @@ Profile:
 - Initial investment amount: ${profile.initial_amount ? `${isIndia ? "₹" : "$"}${Number(profile.initial_amount).toLocaleString()}` : "not specified"}
 - Monthly contribution: ${profile.monthly_contribution != null ? (Number(profile.monthly_contribution) === 0 ? "none" : `${isIndia ? "₹" : "$"}${Number(profile.monthly_contribution).toLocaleString()}/month`) : "not specified"}
 - Target portfolio value: ${profile.target_value ? `${isIndia ? "₹" : "$"}${Number(profile.target_value).toLocaleString()}` : "not specified"}
+- Emergency fund status: ${profile.emergency_fund || "not specified"}
+- Existing high-interest debt: ${profile.existing_debt || "not specified"}
 - Income stability: ${profile.income_stability || "not specified"}
 - Account type: ${profile.account_type || "not specified"}
 - Risk appetite (self-described): ${profile.risk_visual}
@@ -432,6 +434,8 @@ Holdings rules:
 - Initial amount and monthly contribution matter: small amounts should favour low-cost broad ETFs over individual stocks; large amounts can diversify more.
 - Timeline matters: short timelines (<5 years) need more conservative positioning regardless of risk appetite.
 - Income stability matters: variable/entrepreneurial income needs more liquidity buffer than stable salaried income.
+- Emergency fund matters: if emergency_fund is "no", reduce aggressiveness by one level and flag this in considerations.
+- Existing debt matters: if existing_debt is "significant", note in considerations that high-interest debt repayment should be prioritised alongside investing.
 - Vary holdings and rationale based on ALL the profile data above. Do NOT use generic templates.`;
 
   try {

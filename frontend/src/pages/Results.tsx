@@ -131,6 +131,40 @@ const Results: React.FC = () => {
 
   const { holdings, riskProfile, rationale, profileSummary, expectedAnnualReturn, volatility, keyStrengths, considerations, backtestData } = recommendation;
 
+  // Compute projected value from initial amount + monthly contributions
+  const computeProjection = (): string | null => {
+    const initial = Number(profile.initial_amount);
+    const monthly = Number(profile.monthly_contribution) || 0;
+    const years = Number(profile.timeline);
+    if (!initial || !years) return null;
+    const match = expectedAnnualReturn.match(/(\d+(?:\.\d+)?)[–\-](\d+(?:\.\d+)?)/);
+    if (!match) return null;
+    const rate = (parseFloat(match[1]) + parseFloat(match[2])) / 2 / 100;
+    const monthlyRate = rate / 12;
+    const months = years * 12;
+    const fv = initial * Math.pow(1 + rate, years) +
+      (monthly > 0 ? monthly * (Math.pow(1 + monthlyRate, months) - 1) / monthlyRate : 0);
+    const symbol = userInfo?.country === "IN" ? "₹" : "$";
+    if (fv >= 10000000) return `${symbol}${(fv / 1000000).toFixed(0)}M+`;
+    if (fv >= 1000000) return `${symbol}${(fv / 1000000).toFixed(1)}M`;
+    return `${symbol}${Math.round(fv / 1000).toLocaleString()}K`;
+  };
+  const projection = computeProjection();
+
+  const acctMap: Record<string, { title: string; guidance: string }> = {
+    roth_ira:       { title: "Roth IRA placement strategy", guidance: "Your Roth IRA grows tax-free — ideal for your highest-growth holdings (tech ETFs, small caps). Allocate your most aggressive positions here. Bonds and dividend payers can sit in a taxable account instead." },
+    traditional_ira:{ title: "Traditional IRA placement strategy", guidance: "Tax-deferred growth means income-generating assets (bonds, REITs, dividend ETFs) belong here — you defer the tax until withdrawal. Hold growth-oriented ETFs in a Roth if you have one." },
+    "401k":         { title: "401(k) placement strategy", guidance: "Maximise your employer match first — it's an instant 50–100% return. Within the 401(k), favour the lowest-cost index funds available. Hold any alternative assets or individual stocks in a separate taxable or Roth account." },
+    taxable:        { title: "Taxable account strategy", guidance: "In a taxable account, tax efficiency is critical. Favour low-turnover index ETFs (VTI, VXUS) over actively managed funds. Consider tax-loss harvesting annually. Hold bonds in a tax-advantaged account if possible — bond income is taxed as ordinary income." },
+    isa:            { title: "ISA placement strategy", guidance: "Your Stocks & Shares ISA shelters all growth and income from UK tax — maximise your annual £20,000 allowance. Hold your highest-growth and dividend-paying assets here first." },
+    sipp:           { title: "SIPP placement strategy", guidance: "Your SIPP receives tax relief on contributions (up to 60% effective relief for higher-rate taxpayers). Ideal for long-term growth assets. Remember the 25% tax-free lump sum at retirement — plan for this in your asset mix." },
+    ppf:            { title: "PPF placement strategy", guidance: "PPF provides guaranteed 7.1% tax-free returns — use your full ₹1.5L annual limit. It's your lowest-risk, highest-certainty holding. Let equity ETFs (NIFTYBEES, MIDFTY) handle the growth component of your portfolio." },
+    demat:          { title: "Demat account strategy", guidance: "Your equity holdings in a demat account are subject to LTCG above ₹1 lakh. Hold ETFs for at least 12 months to qualify for 10% LTCG vs 15% STCG. Consider ELSS funds for Section 80C benefits alongside your direct equity." },
+  };
+  const accountGuidance = profile?.account_type && profile.account_type !== "mixed"
+    ? acctMap[String(profile.account_type)] ?? null
+    : null;
+
   type TransitionAction = 'SELL' | 'TRIM' | 'KEEP' | 'ADD' | 'BUY';
   interface TransitionItem {
     ticker: string;
@@ -212,7 +246,7 @@ const Results: React.FC = () => {
           {[
             { label: "Expected Annual Return", value: expectedAnnualReturn },
             { label: "Estimated Volatility", value: volatility },
-            { label: "Portfolio Holdings", value: `${holdings.length} positions` },
+            ...(projection && profile.timeline ? [{ label: `Projected value in ${profile.timeline} years`, value: projection }] : [{ label: "Portfolio Holdings", value: `${holdings.length} positions` }]),
           ].map((m) => (
             <div key={m.label} className="bg-navy-950 px-8 py-7">
               <div className="label-overline opacity-35 mb-2">{m.label}</div>
@@ -315,6 +349,17 @@ const Results: React.FC = () => {
           </AnimatePresence>
         </motion.div>
 
+        {/* Account placement guidance — shown prominently right after holdings */}
+        {accountGuidance && (
+          <motion.div
+            initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.25 }}
+            className="border border-gold-500/20 bg-gold-500/3 px-8 py-7"
+          >
+            <h3 className="label-overline mb-3 opacity-50">{accountGuidance.title}</h3>
+            <p className="font-sans text-sm text-cream-200/65 leading-relaxed max-w-3xl">{accountGuidance.guidance}</p>
+          </motion.div>
+        )}
+
         {/* Transition Plan */}
         {userInfo?.currentHoldings && userInfo.currentHoldings.length > 0 && (() => {
           const plan = computeTransitionPlan(userInfo.currentHoldings!, holdings);
@@ -385,7 +430,7 @@ const Results: React.FC = () => {
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.35 }}>
             <h2 className="font-display text-2xl text-cream-50 mb-2">30-Year Historical Backtest</h2>
             <p className="text-cream-200/25 font-sans text-xs mb-8">
-              Hypothetical $10,000 investment · 1995–2024 · Actual S&P 500 annual returns · Dotcom crash, 2008 crisis, COVID, 2022 rate shock all included
+              Hypothetical $10,000 lump-sum · static allocation · 1995–2024 · no rebalancing, contributions, or withdrawals assumed · includes dotcom crash, 2008 crisis, COVID, 2022 rate shock · past performance does not predict future results
             </p>
             <div className="bg-navy-800/30 border border-white/5 p-8">
               <ResponsiveContainer width="100%" height={320}>
@@ -466,88 +511,6 @@ const Results: React.FC = () => {
           </div>
         </motion.div>
 
-        {/* PORTFOLIO TUNER */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.55 }}
-          className="border border-gold-500/15 bg-navy-800/30 p-10"
-        >
-          <div className="mb-8">
-            <span className="label-overline opacity-50 block mb-3">Tune your portfolio</span>
-            <h2 className="font-display text-2xl text-cream-50 mb-2">Adjust your risk and return</h2>
-            <p className="text-cream-200/35 font-sans text-sm">
-              Not quite right? Slide to a different risk level and we'll rebuild the portfolio instantly.
-            </p>
-          </div>
-
-          {/* Preset buttons */}
-          <div className="grid grid-cols-5 gap-2 mb-8">
-            {TUNE_LABELS.map((label, i) => (
-              <button
-                key={i}
-                onClick={() => handleTune(i)}
-                className={`py-3 px-2 text-center border transition-all duration-200 text-xs font-sans ${
-                  tuneLevel === i
-                    ? "border-gold-500 text-gold-400 bg-gold-500/8"
-                    : "border-white/8 text-cream-200/30 hover:border-white/20 hover:text-cream-200/60"
-                }`}
-              >
-                {label}
-              </button>
-            ))}
-          </div>
-
-          {/* Slider */}
-          <div className="px-2">
-            <input
-              type="range"
-              min={0}
-              max={4}
-              step={1}
-              value={tuneLevel}
-              onChange={(e) => handleTune(Number(e.target.value))}
-              className="w-full"
-              style={{
-                background: `linear-gradient(to right, #C9A96E ${(tuneLevel / 4) * 100}%, rgba(201,169,110,0.15) ${(tuneLevel / 4) * 100}%)`,
-              }}
-            />
-            <div className="flex justify-between mt-3">
-              <span className="font-sans text-xs text-cream-200/25">Preserve capital</span>
-              <span className="font-sans text-xs text-cream-200/25">Maximum growth</span>
-            </div>
-          </div>
-
-          {/* Current level stats */}
-          {recommendation.allProfiles && (
-            <div className="mt-8 flex gap-6">
-              <div>
-                <div className="label-overline opacity-25 mb-1">Selected level</div>
-                <div className="font-display text-lg text-gold-400">{TUNE_LABELS[tuneLevel]}</div>
-              </div>
-              {recommendation.allProfiles[tuneLevel] && (
-                <>
-                  <div>
-                    <div className="label-overline opacity-25 mb-1">Expected return</div>
-                    <div className="font-sans text-sm text-cream-100">
-                      {recommendation.allProfiles[tuneLevel].expectedAnnualReturn}
-                    </div>
-                  </div>
-                  <div>
-                    <div className="label-overline opacity-25 mb-1">Volatility</div>
-                    <div className="font-sans text-sm text-cream-100">
-                      {recommendation.allProfiles[tuneLevel].volatility}
-                    </div>
-                  </div>
-                </>
-              )}
-              {tuning && (
-                <div className="flex items-end pb-0.5">
-                  <span className="text-cream-200/30 font-sans text-xs animate-pulse">Rebuilding portfolio...</span>
-                </div>
-              )}
-            </div>
-          )}
-        </motion.div>
-
         {/* Actions */}
         <div className="flex gap-4 no-print">
           <button
@@ -563,32 +526,6 @@ const Results: React.FC = () => {
             Assess existing portfolio
           </button>
         </div>
-
-        {/* Account placement guidance */}
-        {profile?.account_type && profile.account_type !== "mixed" && (() => {
-          const acctMap: Record<string, { title: string; guidance: string }> = {
-            roth_ira:       { title: "Roth IRA placement strategy", guidance: "Your Roth IRA grows tax-free — ideal for your highest-growth holdings (tech ETFs, small caps). Allocate your most aggressive positions here. Bonds and dividend payers can sit in a taxable account instead." },
-            traditional_ira:{ title: "Traditional IRA placement strategy", guidance: "Tax-deferred growth means income-generating assets (bonds, REITs, dividend ETFs) belong here — you defer the tax until withdrawal. Hold growth-oriented ETFs in a Roth if you have one." },
-            "401k":         { title: "401(k) placement strategy", guidance: "Maximise your employer match first — it's an instant 50–100% return. Within the 401(k), favour the lowest-cost index funds available. Hold any alternative assets or individual stocks in a separate taxable or Roth account." },
-            taxable:        { title: "Taxable account strategy", guidance: "In a taxable account, tax efficiency is critical. Favour low-turnover index ETFs (VTI, VXUS) over actively managed funds. Consider tax-loss harvesting annually. Hold bonds in a tax-advantaged account if possible — bond income is taxed as ordinary income." },
-            isa:            { title: "ISA placement strategy", guidance: "Your Stocks & Shares ISA shelters all growth and income from UK tax — maximise your annual £20,000 allowance. Hold your highest-growth and dividend-paying assets here first." },
-            sipp:           { title: "SIPP placement strategy", guidance: "Your SIPP receives tax relief on contributions (up to 60% effective relief for higher-rate taxpayers). Ideal for long-term growth assets. Remember the 25% tax-free lump sum at retirement — plan for this in your asset mix." },
-            ppf:            { title: "PPF placement strategy", guidance: "PPF provides guaranteed 7.1% tax-free returns — use your full ₹1.5L annual limit. It's your lowest-risk, highest-certainty holding. Let equity ETFs (NIFTYBEES, MIDFTY) handle the growth component of your portfolio." },
-            demat:          { title: "Demat account strategy", guidance: "Your equity holdings in a demat account are subject to LTCG above ₹1 lakh. Hold ETFs for at least 12 months to qualify for 10% LTCG vs 15% STCG. Consider ELSS funds for Section 80C benefits alongside your direct equity." },
-          };
-          const acct = String(profile.account_type);
-          const guidance = acctMap[acct];
-          if (!guidance) return null;
-          return (
-            <motion.div
-              initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }}
-              className="border-l-2 border-gold-500/25 pl-8 py-1"
-            >
-              <h3 className="label-overline mb-3 opacity-35">{guidance.title}</h3>
-              <p className="font-sans text-sm text-cream-200/55 leading-relaxed max-w-3xl">{guidance.guidance}</p>
-            </motion.div>
-          );
-        })()}
 
         {/* Disclaimer */}
         <div className="border-t border-white/5 pt-8">
