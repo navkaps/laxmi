@@ -480,8 +480,8 @@ Holdings rules:
 
     res.json(recommendation);
   } catch (e) {
-    console.error("Claude API error:", e.message);
-    res.status(500).json({ error: "Failed to generate recommendation. Please try again." });
+    console.error("Claude API error:", e.message, e.stack);
+    res.status(500).json({ error: e.message || "Failed to generate recommendation. Please try again." });
   }
 });
 

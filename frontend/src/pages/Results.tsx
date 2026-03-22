@@ -57,8 +57,10 @@ const Results: React.FC = () => {
           setLoading(false);
           setTuning(false);
         })
-        .catch(() => {
-          setError("We encountered an issue. Please try again.");
+        .catch((err) => {
+          const msg = err?.response?.data?.error || err?.message || "Unknown error";
+          console.error("Recommend failed:", msg);
+          setError(`Error: ${msg}`);
           setLoading(false);
           setTuning(false);
         });
