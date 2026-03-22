@@ -388,16 +388,19 @@ Profile:
 - Age: ${profile.age}
 - Country: ${isIndia ? "India" : "United States"}
 - Goal: ${profile.goal}
+- Investment timeline: ${profile.timeline ? `${profile.timeline} years` : "not specified"}
+- Initial investment amount: ${profile.initial_amount ? `${isIndia ? "₹" : "$"}${Number(profile.initial_amount).toLocaleString()}` : "not specified"}
+- Monthly contribution: ${profile.monthly_contribution != null ? (Number(profile.monthly_contribution) === 0 ? "none" : `${isIndia ? "₹" : "$"}${Number(profile.monthly_contribution).toLocaleString()}/month`) : "not specified"}
+- Target portfolio value: ${profile.target_value ? `${isIndia ? "₹" : "$"}${Number(profile.target_value).toLocaleString()}` : "not specified"}
+- Income stability: ${profile.income_stability || "not specified"}
+- Account type: ${profile.account_type || "not specified"}
 - Risk appetite (self-described): ${profile.risk_visual}
 - Crash behavior: ${profile.crash_behavior}
 - Max acceptable loss: ${profile.max_loss}%
 - Target risk level: ${riskLabel} (level ${level} of 4)
-${profile.investment_horizon ? `- Investment horizon: ${profile.investment_horizon}` : ""}
-${profile.income ? `- Monthly income: ${profile.income}` : ""}
 ${profile.wishlist ? `- Specific wishlist / exclusions (MUST be honoured): ${profile.wishlist}` : ""}
 ${profile.focus_areas?.length ? `- Sectors to lean into: ${profile.focus_areas.join(", ")}` : ""}
 ${profile.avoid_areas?.length ? `- Sectors/instruments to exclude: ${profile.avoid_areas.join(", ")}` : ""}
-${profile.notes ? `- Additional context: ${profile.notes}` : ""}
 
 Return a JSON object with exactly these fields:
 {
@@ -425,7 +428,11 @@ Holdings rules:
 - Use ${isIndia ? "Indian market tickers (NSE/BSE)" : "US market tickers"}.
 - Allocations must sum to exactly 100.
 - Include 5–8 holdings appropriate for the ${riskLabel} risk level.
-- Vary holdings and rationale based on the investor's specific goal (${profile.goal}), age (${profile.age}), and crash behavior (${profile.crash_behavior}). Do NOT use generic templates.`;
+- Account type matters: if account_type is roth_ira put highest-growth assets there; if 401k reflect limited fund selection; if demat reflect Indian tax rules (LTCG/STCG); etc.
+- Initial amount and monthly contribution matter: small amounts should favour low-cost broad ETFs over individual stocks; large amounts can diversify more.
+- Timeline matters: short timelines (<5 years) need more conservative positioning regardless of risk appetite.
+- Income stability matters: variable/entrepreneurial income needs more liquidity buffer than stable salaried income.
+- Vary holdings and rationale based on ALL the profile data above. Do NOT use generic templates.`;
 
   try {
     const message = await anthropic.messages.create({
