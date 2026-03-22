@@ -39,7 +39,17 @@ try { csvParseSync = require("csv-parse/sync").parse; } catch {
 const upload = multer({ dest: path.join(__dirname, "uploads/"), limits: { fileSize: 20 * 1024 * 1024 } });
 
 const app = express();
-app.use(cors({ origin: "http://localhost:3000" }));
+app.use(cors({
+  origin: (origin, cb) => {
+    // Allow: no origin (curl/mobile), any localhost port, any Vercel preview/prod
+    if (!origin || /^http:\/\/localhost(:\d+)?$/.test(origin) || /\.vercel\.app$/.test(origin)) {
+      cb(null, true);
+    } else {
+      cb(new Error("CORS: origin not allowed — " + origin));
+    }
+  },
+  credentials: true,
+}));
 app.use(express.json());
 
 // ─── Database setup ────────────────────────────────────────────────────────────
