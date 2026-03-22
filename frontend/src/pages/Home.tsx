@@ -43,7 +43,7 @@ const Home: React.FC = () => {
             ctx.beginPath();
             ctx.moveTo(p.x, p.y);
             ctx.lineTo(q.x, q.y);
-            ctx.strokeStyle = `rgba(201, 169, 110, ${0.06 * (1 - dist / 150)})`;
+            ctx.strokeStyle = `rgba(99, 102, 241, ${0.08 * (1 - dist / 150)})`;
             ctx.lineWidth = 0.5;
             ctx.stroke();
           }
@@ -51,7 +51,7 @@ const Home: React.FC = () => {
 
         ctx.beginPath();
         ctx.arc(p.x, p.y, 1, 0, Math.PI * 2);
-        ctx.fillStyle = `rgba(201, 169, 110, ${p.alpha})`;
+        ctx.fillStyle = `rgba(129, 140, 248, ${p.alpha})`;
         ctx.fill();
       });
       animId = requestAnimationFrame(draw);
@@ -75,11 +75,31 @@ const Home: React.FC = () => {
       <canvas ref={canvasRef} className="absolute inset-0 pointer-events-none" />
 
       {/* Gradient orbs */}
-      <div className="absolute top-1/4 left-1/3 w-96 h-96 bg-gold-600/5 rounded-full blur-3xl pointer-events-none" />
-      <div className="absolute bottom-1/4 right-1/4 w-64 h-64 bg-gold-500/5 rounded-full blur-3xl pointer-events-none" />
+      <div className="absolute top-1/4 left-1/3 w-96 h-96 bg-violet-600/6 rounded-full blur-3xl pointer-events-none" />
+      <div className="absolute bottom-1/4 right-1/4 w-64 h-64 bg-indigo-500/6 rounded-full blur-3xl pointer-events-none" />
+
+      {/* Logo */}
+      <div className="absolute top-6 left-10 flex items-center gap-3">
+        <svg width="28" height="28" viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <linearGradient id="logo-bg" x1="0" y1="0" x2="28" y2="28" gradientUnits="userSpaceOnUse">
+              <stop offset="0%" stopColor="#6366F1"/>
+              <stop offset="100%" stopColor="#7C3AED"/>
+            </linearGradient>
+          </defs>
+          <rect width="28" height="28" rx="6" fill="url(#logo-bg)"/>
+          <rect x="6.5" y="17" width="3.5" height="5" rx="0.5" fill="white" fillOpacity="0.45"/>
+          <rect x="12.25" y="12.5" width="3.5" height="9.5" rx="0.5" fill="white" fillOpacity="0.7"/>
+          <rect x="18" y="7" width="3.5" height="15" rx="0.5" fill="white"/>
+        </svg>
+        <div>
+          <span className="font-display text-base gradient-text">Laxmi</span>
+          <span className="hidden sm:inline font-sans text-xs text-white/30 ml-2 tracking-wide">Your AI wealth advisor</span>
+        </div>
+      </div>
 
       {/* Horizontal rule top */}
-      <div className="absolute top-32 left-10 right-10 h-px bg-gradient-to-r from-transparent via-gold-500/20 to-transparent" />
+      <div className="absolute top-32 left-10 right-10 h-px bg-gradient-to-r from-transparent via-white/8 to-transparent" />
 
       <div className="relative z-10 text-center max-w-3xl px-8">
         <motion.div
@@ -99,7 +119,7 @@ const Home: React.FC = () => {
         >
           Your portfolio,
           <br />
-          <span className="italic text-gold-400">precisely crafted.</span>
+          <span className="gradient-text italic">precisely crafted.</span>
         </motion.h1>
 
         <motion.p
@@ -146,7 +166,7 @@ const Home: React.FC = () => {
             { label: "Profile questions", value: "10 questions" },
           ].map((stat) => (
             <div key={stat.label} className="text-center">
-              <div className="font-display text-xl text-gold-400">{stat.value}</div>
+              <div className="font-display text-xl gradient-text">{stat.value}</div>
               <div className="label-overline mt-1 opacity-50">{stat.label}</div>
             </div>
           ))}

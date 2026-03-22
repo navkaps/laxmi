@@ -222,10 +222,17 @@ const Results: React.FC = () => {
     <div className="min-h-screen bg-navy-950 pb-24">
       {/* Logo */}
       <div className="fixed top-6 left-10 z-50 flex items-center gap-3">
-        <svg width="20" height="16" viewBox="0 0 20 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <rect x="0" y="10" width="4" height="6" rx="0.5" fill="#6366F1" fillOpacity="0.45"/>
-          <rect x="8" y="5" width="4" height="11" rx="0.5" fill="#818CF8" fillOpacity="0.7"/>
-          <rect x="16" y="0" width="4" height="16" rx="0.5" fill="#A5B4FC"/>
+        <svg width="28" height="28" viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <linearGradient id="logo-bg" x1="0" y1="0" x2="28" y2="28" gradientUnits="userSpaceOnUse">
+              <stop offset="0%" stopColor="#6366F1"/>
+              <stop offset="100%" stopColor="#7C3AED"/>
+            </linearGradient>
+          </defs>
+          <rect width="28" height="28" rx="6" fill="url(#logo-bg)"/>
+          <rect x="6.5" y="17" width="3.5" height="5" rx="0.5" fill="white" fillOpacity="0.45"/>
+          <rect x="12.25" y="12.5" width="3.5" height="9.5" rx="0.5" fill="white" fillOpacity="0.7"/>
+          <rect x="18" y="7" width="3.5" height="15" rx="0.5" fill="white"/>
         </svg>
         <div>
           <span className="font-display text-base gradient-text">Laxmi</span>
