@@ -25,7 +25,6 @@ module.exports = {
         },
       },
       fontFamily: {
-        serif: ["'Playfair Display'", "Georgia", "serif"],
         sans: ["'Inter'", "system-ui", "sans-serif"],
         display: ["'DM Serif Display'", "Georgia", "serif"],
       },

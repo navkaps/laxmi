@@ -122,8 +122,8 @@ const Results: React.FC = () => {
 
   if (error || !recommendation) {
     return (
-      <div className="min-h-screen bg-navy-950 flex flex-col items-center justify-center gap-6">
-        <p className="text-cream-200/40 font-sans text-sm">{error}</p>
+      <div className="min-h-screen bg-navy-950 flex flex-col items-center justify-center gap-6 px-6">
+        <div className="alert-error max-w-sm text-center">{error || "Something went wrong."}</div>
         <button onClick={() => navigate("/")} className="btn-ghost">Start over</button>
       </div>
     );
@@ -227,8 +227,8 @@ const Results: React.FC = () => {
             <span className="label-overline opacity-40 block mb-4">
               {userInfo?.name ? `${userInfo.name}'s Portfolio` : "Your Portfolio"}
             </span>
-            <h1 className="font-display text-5xl text-cream-50 mb-4">{riskProfile} Strategy</h1>
-            <p className="text-cream-200/45 font-sans font-light text-lg max-w-2xl leading-relaxed">
+            <h1 className="font-display text-3xl sm:text-4xl md:text-5xl text-cream-50 mb-4">{riskProfile} Strategy</h1>
+            <p className="text-cream-200/65 font-sans font-light text-base md:text-lg max-w-2xl leading-relaxed">
               {profileSummary}
             </p>
           </motion.div>
@@ -241,7 +241,7 @@ const Results: React.FC = () => {
         <motion.div
           initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.1 }}
-          className="grid grid-cols-3 gap-px bg-white/5"
+          className="grid grid-cols-1 sm:grid-cols-3 gap-px bg-white/8"
         >
           {[
             { label: "Expected Annual Return", value: expectedAnnualReturn },
@@ -249,8 +249,8 @@ const Results: React.FC = () => {
             ...(projection && profile.timeline ? [{ label: `Projected value in ${profile.timeline} years`, value: projection }] : [{ label: "Portfolio Holdings", value: `${holdings.length} positions` }]),
           ].map((m) => (
             <div key={m.label} className="bg-navy-950 px-8 py-7">
-              <div className="label-overline opacity-35 mb-2">{m.label}</div>
-              <div className="font-display text-3xl text-gold-400">{m.value}</div>
+              <div className="label-overline opacity-40 mb-2">{m.label}</div>
+              <div className="font-display text-2xl md:text-3xl text-gold-400">{m.value}</div>
             </div>
           ))}
         </motion.div>
@@ -276,10 +276,11 @@ const Results: React.FC = () => {
               <button
                 key={i}
                 onClick={() => handleTune(i)}
-                className={`py-3 px-2 text-center border transition-all duration-200 text-xs font-sans ${
+                disabled={tuning}
+                className={`py-3 px-2 text-center border transition-all duration-200 text-xs font-sans disabled:opacity-40 disabled:cursor-not-allowed ${
                   tuneLevel === i
                     ? "border-gold-500 text-gold-400 bg-gold-500/10"
-                    : "border-white/8 text-cream-200/30 hover:border-white/20 hover:text-cream-200/60"
+                    : "border-white/15 text-cream-200/40 hover:border-white/30 hover:text-cream-200/65"
                 }`}
               >
                 {label}
@@ -301,7 +302,7 @@ const Results: React.FC = () => {
 
         {/* Holdings */}
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}>
-          <h2 className="font-display text-2xl text-cream-50 mb-8">Portfolio Allocation</h2>
+          <h2 className="font-display text-xl md:text-2xl text-cream-50 mb-8">Portfolio Allocation</h2>
           <AnimatePresence mode="wait">
             <motion.div
               key={riskProfile}
@@ -315,7 +316,7 @@ const Results: React.FC = () => {
                   initial={{ opacity: 0, x: -20 }}
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ delay: i * 0.06 }}
-                  className="bg-navy-800/50 border border-white/5 p-6"
+                  className="bg-navy-800/50 border border-white/10 p-6"
                 >
                   <div className="flex items-start justify-between mb-3">
                     <div className="flex items-center gap-4">
@@ -342,7 +343,7 @@ const Results: React.FC = () => {
                       className="h-full bg-gold-500/70"
                     />
                   </div>
-                  <p className="text-cream-200/35 font-sans text-xs leading-relaxed">{h.rationale}</p>
+                  <p className="text-cream-200/65 font-sans text-xs leading-relaxed">{h.rationale}</p>
                 </motion.div>
               ))}
             </motion.div>
@@ -428,7 +429,7 @@ const Results: React.FC = () => {
         {/* 30-year backtest */}
         {backtestData?.length > 0 && (
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.35 }}>
-            <h2 className="font-display text-2xl text-cream-50 mb-2">30-Year Historical Backtest</h2>
+            <h2 className="font-display text-xl md:text-2xl text-cream-50 mb-2">30-Year Historical Backtest</h2>
             <p className="text-cream-200/25 font-sans text-xs mb-8">
               Hypothetical $10,000 lump-sum · static allocation · 1995–2024 · no rebalancing, contributions, or withdrawals assumed · includes dotcom crash, 2008 crisis, COVID, 2022 rate shock · past performance does not predict future results
             </p>
@@ -485,14 +486,14 @@ const Results: React.FC = () => {
         >
           <div className="card-dark">
             <h3 className="label-overline mb-6 opacity-50">Why this portfolio</h3>
-            <p className="font-sans text-sm text-cream-200/55 leading-relaxed">{rationale}</p>
+            <p className="font-sans text-sm text-cream-200/65 leading-relaxed">{rationale}</p>
           </div>
           <div className="space-y-6">
             <div className="card-dark">
               <h3 className="label-overline mb-4 opacity-50">Key strengths</h3>
               <ul className="space-y-3">
                 {keyStrengths.map((s, i) => (
-                  <li key={i} className="flex items-start gap-3 font-sans text-xs text-cream-200/55 leading-relaxed">
+                  <li key={i} className="flex items-start gap-3 font-sans text-xs text-cream-200/65 leading-relaxed">
                     <span className="text-gold-500 mt-0.5 flex-shrink-0 text-base leading-none">—</span>{s}
                   </li>
                 ))}
@@ -502,7 +503,7 @@ const Results: React.FC = () => {
               <h3 className="label-overline mb-4 opacity-50">Things to consider</h3>
               <ul className="space-y-3">
                 {considerations.map((c, i) => (
-                  <li key={i} className="flex items-start gap-3 font-sans text-xs text-cream-200/40 leading-relaxed">
+                  <li key={i} className="flex items-start gap-3 font-sans text-xs text-cream-200/65 leading-relaxed">
                     <span className="text-cream-200/20 mt-0.5 flex-shrink-0 text-base leading-none">—</span>{c}
                   </li>
                 ))}

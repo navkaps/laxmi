@@ -90,8 +90,8 @@ const UserInfoPage: React.FC = () => {
       <div className="w-full max-w-md">
         <motion.div initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }}>
           <span className="label-overline opacity-35 block mb-5">Before we begin</span>
-          <h1 className="font-display text-4xl text-cream-50 mb-3 leading-tight">Where are you investing?</h1>
-          <p className="text-cream-200/35 font-sans text-sm leading-relaxed mb-12">
+          <h1 className="font-display text-3xl sm:text-4xl text-cream-50 mb-3 leading-tight">Where are you investing?</h1>
+          <p className="text-cream-200/65 font-sans text-sm leading-relaxed mb-12">
             Your country determines which markets, instruments, and tax structures we recommend.
           </p>
 
@@ -111,13 +111,13 @@ const UserInfoPage: React.FC = () => {
                     }}
                     className={`flex items-center gap-3 px-4 py-3 border text-left transition-all duration-200 ${
                       info.country === c.code
-                        ? "border-gold-500 bg-gold-500/8"
-                        : "border-white/8 bg-navy-800/30 hover:border-white/18"
+                        ? "border-gold-500 bg-gold-500/10"
+                        : "border-white/15 bg-navy-800/30 hover:border-white/30"
                     }`}
                   >
                     <span className="text-xl leading-none">{c.flag}</span>
                     <span className={`font-sans text-sm transition-colors ${
-                      info.country === c.code ? "text-cream-50" : "text-cream-200/50"
+                      info.country === c.code ? "text-cream-50" : "text-cream-200/65"
                     }`}>{c.name}</span>
                   </motion.button>
                 ))}

@@ -20,7 +20,7 @@ const SliderInput: React.FC<SliderInputProps> = ({
 
   return (
     <div className="w-full space-y-10">
-      {/* Large value display */}
+      {/* Value display */}
       <motion.div
         key={display}
         initial={{ opacity: 0.6, y: 4 }}
@@ -33,8 +33,9 @@ const SliderInput: React.FC<SliderInputProps> = ({
         </span>
       </motion.div>
 
-      {/* Slider track */}
+      {/* Slider */}
       <div className="relative px-1">
+        <label className="sr-only">Adjust value</label>
         <input
           type="range"
           min={min}
@@ -44,13 +45,12 @@ const SliderInput: React.FC<SliderInputProps> = ({
           onChange={(e) => onChange(Number(e.target.value))}
           className="w-full"
           style={{
-            background: `linear-gradient(to right, #C9A96E ${pct}%, rgba(255,255,255,0.06) ${pct}%)`,
+            background: `linear-gradient(to right, #C9A96E ${pct}%, rgba(255,255,255,0.08) ${pct}%)`,
           }}
         />
-        {/* Labels */}
         <div className="flex justify-between mt-4">
-          <span className="font-sans text-xs text-cream-200/25">{minLabel}</span>
-          <span className="font-sans text-xs text-cream-200/25">{maxLabel}</span>
+          <span className="font-sans text-xs text-cream-200/40">{minLabel}</span>
+          <span className="font-sans text-xs text-cream-200/40">{maxLabel}</span>
         </div>
       </div>
     </div>

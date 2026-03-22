@@ -198,13 +198,13 @@ const Profiler: React.FC = () => {
               exit="exit"
               transition={{ duration: 0.3, ease: "easeInOut" }}
             >
-              <h2 className="font-display text-3xl md:text-4xl text-cream-50 mb-3 leading-tight">
+              <h2 className="font-display text-2xl sm:text-3xl md:text-4xl text-cream-50 mb-3 leading-tight">
                 {current === 0 && firstName
                   ? `${firstName}, how old are you?`
                   : question.question}
               </h2>
               {question.subtext && (
-                <p className="text-cream-200/35 font-sans text-sm mb-10 leading-relaxed max-w-lg">
+                <p className="text-cream-200/65 font-sans text-sm mb-10 leading-relaxed max-w-lg">
                   {question.subtext}
                 </p>
               )}
