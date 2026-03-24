@@ -13,7 +13,21 @@ import {
 } from "recharts";
 import { UserProfile, PortfolioRecommendation, UserInfo } from "../types";
 import axios from "axios";
-import { TriviaQuiz } from "../components/TriviaQuiz";
+
+const INVESTMENT_FACTS = [
+  { stat: "$1 invested in the S&P 500 in 1928", detail: "would be worth over $700,000 today — the power of compounding over 95 years." },
+  { stat: "Warren Buffett earned 99% of his wealth", detail: "after his 50th birthday. Time in the market is the ultimate edge." },
+  { stat: "The average bear market lasts 9.6 months", detail: "while the average bull market lasts over 2.7 years. Patience is a strategy." },
+  { stat: "Investors who missed the 10 best trading days", detail: "of the last 20 years cut their returns roughly in half. Staying invested matters." },
+  { stat: "A 1% reduction in annual fees", detail: "can add up to 28% more wealth over a 30-year investment horizon." },
+  { stat: "Index funds outperform 92% of active managers", detail: "over any rolling 15-year period. Low costs win over time." },
+  { stat: "The global stock market has recovered", detail: "from every single crash in history — including 1929, 2000, and 2008." },
+  { stat: "Dollar-cost averaging removes emotion", detail: "Investing a fixed amount regularly reduces the impact of market timing." },
+  { stat: "Diversification is the only free lunch in investing", detail: "— Nobel laureate Harry Markowitz. Spread risk without sacrificing return." },
+  { stat: "Inflation erodes purchasing power by ~3% annually", detail: "Cash sitting idle loses half its value in under 25 years." },
+  { stat: "The Rule of 72 is a simple shortcut", detail: "Divide 72 by your annual return rate to find how many years it takes to double your money." },
+  { stat: "Emerging markets represent 85% of the world's population", detail: "but only around 12% of global market capitalisation — a structural opportunity." },
+];
 
 const LOADING_STEPS = [
   "Analysing your investor profile...",
@@ -45,6 +59,7 @@ const Results: React.FC = () => {
   const [tuneLevel, setTuneLevel] = useState<number>(2);
   const [error, setError] = useState<string | null>(null);
   const [showPrompt, setShowPrompt] = useState(false);
+  const [factIndex, setFactIndex] = useState(0);
 
   const fetchRecommendation = useCallback(
     (level: number, isInitial = false) => {
@@ -76,8 +91,12 @@ const Results: React.FC = () => {
       setLoadingStep((s) => (s < LOADING_STEPS.length - 1 ? s + 1 : s));
     }, 1600);
 
+    const factInterval = setInterval(() => {
+      setFactIndex((i) => (i + 1) % INVESTMENT_FACTS.length);
+    }, 4500);
+
     fetchRecommendation(2, true);
-    return () => clearInterval(stepInterval);
+    return () => { clearInterval(stepInterval); clearInterval(factInterval); };
   }, []);
 
   const handleTune = (level: number) => {
@@ -88,65 +107,62 @@ const Results: React.FC = () => {
   if (!profile) return null;
 
   if (loading) {
+    const fact = INVESTMENT_FACTS[factIndex];
     return (
-      <div className="min-h-screen bg-navy-950 flex flex-col">
-        {/* Top status bar */}
-        <div className="w-full border-b border-white/[0.05] bg-white/[0.02] px-6 py-3 flex items-center justify-between">
-          {/* Logo */}
-          <div className="flex items-center gap-3">
-            <svg width="22" height="22" viewBox="0 0 28 28" fill="none">
-              <defs>
-                <linearGradient id="g-logo-loading" x1="0" y1="0" x2="28" y2="28" gradientUnits="userSpaceOnUse">
-                  <stop stopColor="#D4A843"/><stop offset="1" stopColor="#A07A35"/>
-                </linearGradient>
-              </defs>
-              <rect width="28" height="28" rx="6" fill="url(#g-logo-loading)"/>
-              <path d="M14 20 L14 9 M10 13 L14 9 L18 13" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-            </svg>
-            <span className="font-display text-sm font-bold tracking-tight text-white">Laxmi</span>
-          </div>
-          {/* Status */}
-          <div className="flex items-center gap-3">
+      <div className="min-h-screen bg-navy-950 flex flex-col items-center justify-center gap-14 px-6">
+        {/* Spinner */}
+        <div className="w-10 h-10 border border-gold-500/30 flex items-center justify-center">
+          <motion.div
+            className="w-2.5 h-2.5 bg-gold-500 rotate-45"
+            animate={{ scale: [1, 1.4, 1] }}
+            transition={{ repeat: Infinity, duration: 1.4 }}
+          />
+        </div>
+
+        {/* Rotating fact */}
+        <div className="max-w-md w-full text-center">
+          <AnimatePresence mode="wait">
             <motion.div
-              className="w-1.5 h-1.5 rounded-full bg-gold-400"
-              animate={{ opacity: [1, 0.3, 1] }}
-              transition={{ repeat: Infinity, duration: 1.4 }}
-            />
-            <AnimatePresence mode="wait">
-              <motion.p
-                key={loadingStep}
-                initial={{ opacity: 0, y: 4 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -4 }}
-                className="text-white/30 font-sans text-xs tracking-wide"
-              >
-                {LOADING_STEPS[loadingStep]}
-              </motion.p>
-            </AnimatePresence>
-          </div>
-          {/* Progress bar */}
-          <div className="hidden sm:flex gap-1">
+              key={factIndex}
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              transition={{ duration: 0.5 }}
+              className="flex flex-col gap-2"
+            >
+              <p className="font-sans text-sm font-semibold text-white/70 leading-snug">
+                {fact.stat}
+              </p>
+              <p className="font-sans text-xs text-white/35 leading-relaxed">
+                {fact.detail}
+              </p>
+            </motion.div>
+          </AnimatePresence>
+        </div>
+
+        {/* Status line */}
+        <div className="flex flex-col items-center gap-4">
+          <AnimatePresence mode="wait">
+            <motion.p
+              key={loadingStep}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="font-sans text-xs text-white/25 tracking-wide"
+            >
+              {LOADING_STEPS[loadingStep]}
+            </motion.p>
+          </AnimatePresence>
+          <div className="flex gap-1.5">
             {LOADING_STEPS.map((_, i) => (
               <div
                 key={i}
-                className={`h-px w-6 transition-all duration-700 ${
+                className={`h-px w-8 transition-all duration-700 ${
                   i <= loadingStep ? "bg-gold-500" : "bg-white/10"
                 }`}
               />
             ))}
           </div>
-        </div>
-
-        {/* Quiz area */}
-        <div className="flex-1 flex flex-col items-center justify-center py-12">
-          <TriviaQuiz />
-        </div>
-
-        {/* Bottom hint */}
-        <div className="w-full pb-6 text-center">
-          <p className="font-sans text-xs text-white/15 tracking-wide">
-            Your personalised portfolio is being built in the background
-          </p>
         </div>
       </div>
     );
