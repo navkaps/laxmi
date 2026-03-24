@@ -13,6 +13,7 @@ import {
 } from "recharts";
 import { UserProfile, PortfolioRecommendation, UserInfo } from "../types";
 import axios from "axios";
+import { TriviaQuiz } from "../components/TriviaQuiz";
 
 const LOADING_STEPS = [
   "Analysing your investor profile...",
@@ -88,36 +89,64 @@ const Results: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-navy-950 flex flex-col items-center justify-center gap-10">
-        <div className="w-8 h-8 border border-gold-500/40 flex items-center justify-center">
-          <motion.div
-            className="w-2 h-2 bg-gold-500 rotate-45"
-            animate={{ scale: [1, 1.3, 1] }}
-            transition={{ repeat: Infinity, duration: 1.2 }}
-          />
-        </div>
-        <div className="h-5 text-center">
-          <AnimatePresence mode="wait">
-            <motion.p
-              key={loadingStep}
-              initial={{ opacity: 0, y: 6 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -6 }}
-              className="text-cream-200/40 font-sans text-sm tracking-wide"
-            >
-              {LOADING_STEPS[loadingStep]}
-            </motion.p>
-          </AnimatePresence>
-        </div>
-        <div className="flex gap-1.5">
-          {LOADING_STEPS.map((_, i) => (
+      <div className="min-h-screen bg-navy-950 flex flex-col">
+        {/* Top status bar */}
+        <div className="w-full border-b border-white/[0.05] bg-white/[0.02] px-6 py-3 flex items-center justify-between">
+          {/* Logo */}
+          <div className="flex items-center gap-3">
+            <svg width="22" height="22" viewBox="0 0 28 28" fill="none">
+              <defs>
+                <linearGradient id="g-logo-loading" x1="0" y1="0" x2="28" y2="28" gradientUnits="userSpaceOnUse">
+                  <stop stopColor="#D4A843"/><stop offset="1" stopColor="#A07A35"/>
+                </linearGradient>
+              </defs>
+              <rect width="28" height="28" rx="6" fill="url(#g-logo-loading)"/>
+              <path d="M14 20 L14 9 M10 13 L14 9 L18 13" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+            </svg>
+            <span className="font-display text-sm font-bold tracking-tight text-white">Laxmi</span>
+          </div>
+          {/* Status */}
+          <div className="flex items-center gap-3">
             <motion.div
-              key={i}
-              className={`h-px w-8 transition-all duration-700 ${
-                i <= loadingStep ? "bg-gold-500" : "bg-white/10"
-              }`}
+              className="w-1.5 h-1.5 rounded-full bg-gold-400"
+              animate={{ opacity: [1, 0.3, 1] }}
+              transition={{ repeat: Infinity, duration: 1.4 }}
             />
-          ))}
+            <AnimatePresence mode="wait">
+              <motion.p
+                key={loadingStep}
+                initial={{ opacity: 0, y: 4 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -4 }}
+                className="text-white/30 font-sans text-xs tracking-wide"
+              >
+                {LOADING_STEPS[loadingStep]}
+              </motion.p>
+            </AnimatePresence>
+          </div>
+          {/* Progress bar */}
+          <div className="hidden sm:flex gap-1">
+            {LOADING_STEPS.map((_, i) => (
+              <div
+                key={i}
+                className={`h-px w-6 transition-all duration-700 ${
+                  i <= loadingStep ? "bg-gold-500" : "bg-white/10"
+                }`}
+              />
+            ))}
+          </div>
+        </div>
+
+        {/* Quiz area */}
+        <div className="flex-1 flex flex-col items-center justify-center py-12">
+          <TriviaQuiz />
+        </div>
+
+        {/* Bottom hint */}
+        <div className="w-full pb-6 text-center">
+          <p className="font-sans text-xs text-white/15 tracking-wide">
+            Your personalised portfolio is being built in the background
+          </p>
         </div>
       </div>
     );
