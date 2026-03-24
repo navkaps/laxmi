@@ -46,11 +46,20 @@ const TUNE_LABELS = [
   "Very Aggressive",
 ];
 
+const DEMO_PROFILE: UserProfile = {
+  age: 34, goal: "wealth_building", timeline: 15, initial_amount: 50000,
+  monthly_contribution: 1000, risk_visual: "moderate", crash_behavior: "hold",
+  max_loss: 25, emergency_fund: "yes_full", existing_debt: "none",
+  income_stability: "stable", account_type: "roth_ira", investment_style: "mostly_etfs",
+};
+const DEMO_USER: UserInfo = { name: "Demo", email: "demo@laxmi.ai", phone: "", country: "US" };
+
 const Results: React.FC = () => {
   const location = useLocation();
   const navigate = useNavigate();
-  const profile = location.state?.profile as UserProfile;
-  const userInfo = location.state?.userInfo as UserInfo;
+  const isDemo = new URLSearchParams(location.search).get("demo") === "1";
+  const profile = (isDemo ? DEMO_PROFILE : location.state?.profile) as UserProfile;
+  const userInfo = (isDemo ? DEMO_USER : location.state?.userInfo) as UserInfo;
 
   const [loading, setLoading] = useState(true);
   const [tuning, setTuning] = useState(false);
