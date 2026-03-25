@@ -26,43 +26,6 @@
   ::-webkit-scrollbar-track { background: transparent; }
   ::-webkit-scrollbar-thumb { background: rgba(99,91,255,0.3); border-radius: 99px; }
 
-  /* ── Light theme overrides for white-opacity Tailwind utilities ── */
-  /* text-white/XX → dark navy equivalents */
-  .text-white\/90 { color: rgba(10,37,64,0.90) !important; }
-  .text-white\/80 { color: rgba(10,37,64,0.80) !important; }
-  .text-white\/70 { color: rgba(10,37,64,0.70) !important; }
-  .text-white\/65 { color: rgba(10,37,64,0.65) !important; }
-  .text-white\/55 { color: rgba(10,37,64,0.55) !important; }
-  .text-white\/50 { color: rgba(10,37,64,0.50) !important; }
-  .text-white\/40 { color: rgba(10,37,64,0.40) !important; }
-  .text-white\/35 { color: rgba(10,37,64,0.35) !important; }
-  .text-white\/30 { color: rgba(10,37,64,0.30) !important; }
-  .text-white\/25 { color: rgba(10,37,64,0.25) !important; }
-  .text-white\/20 { color: rgba(10,37,64,0.20) !important; }
-  .text-white\/15 { color: rgba(10,37,64,0.15) !important; }
-  .text-white\/10 { color: rgba(10,37,64,0.10) !important; }
-
-  /* border-white/XX → light gray borders */
-  .border-white\/5  { border-color: rgba(10,37,64,0.07) !important; }
-  .border-white\/6  { border-color: rgba(10,37,64,0.08) !important; }
-  .border-white\/8  { border-color: rgba(10,37,64,0.10) !important; }
-  .border-white\/10 { border-color: rgba(10,37,64,0.12) !important; }
-  .border-white\/12 { border-color: rgba(10,37,64,0.14) !important; }
-  .border-white\/15 { border-color: rgba(10,37,64,0.16) !important; }
-  .border-white\/18 { border-color: rgba(10,37,64,0.18) !important; }
-  .border-white\/20 { border-color: rgba(10,37,64,0.20) !important; }
-  .border-white\/25 { border-color: rgba(10,37,64,0.22) !important; }
-  .border-white\/30 { border-color: rgba(10,37,64,0.25) !important; }
-  .border-white\/35 { border-color: rgba(10,37,64,0.28) !important; }
-  .border-white\/45 { border-color: rgba(10,37,64,0.32) !important; }
-
-  /* bg-white/XX → light surfaces */
-  .bg-white\/3  { background-color: rgba(10,37,64,0.03) !important; }
-  .bg-white\/4  { background-color: rgba(10,37,64,0.04) !important; }
-  .bg-white\/5  { background-color: rgba(255,255,255,0.9) !important; }
-  .bg-white\/8  { background-color: rgba(255,255,255,0.95) !important; }
-  .bg-white\/10 { background-color: #ffffff !important; }
-
   @keyframes pulseGlow {
     0%, 100% { opacity: 0.5; }
     50%       { opacity: 1; }
@@ -167,6 +130,7 @@ input[type='range'] {
 input[type='range']::-webkit-slider-runnable-track {
   height: 2px;
   border-radius: 99px;
+  background: #E4E8EF;
 }
 input[type='range']::-webkit-slider-thumb {
   -webkit-appearance: none;
@@ -189,7 +153,7 @@ input[type='range']::-webkit-slider-thumb:hover {
 input[type='range']::-moz-range-track {
   height: 2px;
   border-radius: 99px;
-  background: rgba(255,255,255,0.08);
+  background: #E4E8EF;
 }
 input[type='range']::-moz-range-progress {
   height: 2px;
@@ -210,8 +174,45 @@ input[type='range']:focus { outline: none; }
 /* ── Divider ─────────────────────────────────────────────── */
 .divider {
   height: 1px;
-  background: rgba(255,255,255,0.08);
+  background: #E4E8EF;
 }
+
+/* ── Light theme: override Tailwind white-opacity utilities ──────────────
+   These are OUTSIDE @layer so they beat @layer utilities in the cascade. */
+
+.text-white { color: #0A2540; }
+.text-white\/90 { color: rgba(10,37,64,0.90); }
+.text-white\/80 { color: rgba(10,37,64,0.80); }
+.text-white\/70 { color: rgba(10,37,64,0.70); }
+.text-white\/65 { color: rgba(10,37,64,0.65); }
+.text-white\/55 { color: rgba(10,37,64,0.55); }
+.text-white\/50 { color: rgba(10,37,64,0.50); }
+.text-white\/40 { color: rgba(10,37,64,0.40); }
+.text-white\/35 { color: rgba(10,37,64,0.35); }
+.text-white\/30 { color: rgba(10,37,64,0.30); }
+.text-white\/25 { color: rgba(10,37,64,0.25); }
+.text-white\/20 { color: rgba(10,37,64,0.20); }
+.text-white\/15 { color: rgba(10,37,64,0.15); }
+.text-white\/10 { color: rgba(10,37,64,0.10); }
+
+.border-white\/5  { border-color: rgba(10,37,64,0.07); }
+.border-white\/6  { border-color: rgba(10,37,64,0.09); }
+.border-white\/8  { border-color: rgba(10,37,64,0.11); }
+.border-white\/10 { border-color: rgba(10,37,64,0.13); }
+.border-white\/12 { border-color: rgba(10,37,64,0.15); }
+.border-white\/15 { border-color: rgba(10,37,64,0.17); }
+.border-white\/18 { border-color: rgba(10,37,64,0.19); }
+.border-white\/20 { border-color: rgba(10,37,64,0.21); }
+.border-white\/25 { border-color: rgba(10,37,64,0.24); }
+.border-white\/30 { border-color: rgba(10,37,64,0.27); }
+.border-white\/35 { border-color: rgba(10,37,64,0.30); }
+.border-white\/45 { border-color: rgba(10,37,64,0.35); }
+
+.bg-white\/3  { background-color: rgba(10,37,64,0.03); }
+.bg-white\/4  { background-color: rgba(10,37,64,0.04); }
+.bg-white\/5  { background-color: #ffffff; }
+.bg-white\/8  { background-color: #ffffff; }
+.bg-white\/10 { background-color: #ffffff; }
 
 /* ── Print ───────────────────────────────────────────────── */
 @media print {
