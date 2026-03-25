@@ -718,7 +718,7 @@ const Results: React.FC = () => {
                 onChange={e => setFeedback(e.target.value)}
                 placeholder="e.g. I don't want Apple because of ethical reasons, and I'd prefer more exposure to European markets..."
                 rows={3}
-                className="w-full bg-white/4 border border-white/10 rounded-lg px-4 py-3 text-white/80 text-sm font-sans placeholder-white/20 resize-none outline-none focus:border-gold-500/40 transition-colors"
+                className="w-full bg-transparent border border-white/10 rounded-lg px-4 py-3 text-white/80 text-sm font-sans placeholder-white/20 resize-none outline-none focus:border-gold-500/40 transition-colors"
               />
 
               {/* Previous feedback history */}
