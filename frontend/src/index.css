@@ -14,8 +14,8 @@
   html { scroll-behavior: smooth; }
 
   body {
-    background-color: #0A2540;
-    color: #F0F2FF;
+    background-color: #F6F8FA;
+    color: #0A2540;
     font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
     overflow-x: hidden;
   }
@@ -24,7 +24,44 @@
 
   ::-webkit-scrollbar { width: 3px; }
   ::-webkit-scrollbar-track { background: transparent; }
-  ::-webkit-scrollbar-thumb { background: rgba(99,91,255,0.35); border-radius: 99px; }
+  ::-webkit-scrollbar-thumb { background: rgba(99,91,255,0.3); border-radius: 99px; }
+
+  /* ── Light theme overrides for white-opacity Tailwind utilities ── */
+  /* text-white/XX → dark navy equivalents */
+  .text-white\/90 { color: rgba(10,37,64,0.90) !important; }
+  .text-white\/80 { color: rgba(10,37,64,0.80) !important; }
+  .text-white\/70 { color: rgba(10,37,64,0.70) !important; }
+  .text-white\/65 { color: rgba(10,37,64,0.65) !important; }
+  .text-white\/55 { color: rgba(10,37,64,0.55) !important; }
+  .text-white\/50 { color: rgba(10,37,64,0.50) !important; }
+  .text-white\/40 { color: rgba(10,37,64,0.40) !important; }
+  .text-white\/35 { color: rgba(10,37,64,0.35) !important; }
+  .text-white\/30 { color: rgba(10,37,64,0.30) !important; }
+  .text-white\/25 { color: rgba(10,37,64,0.25) !important; }
+  .text-white\/20 { color: rgba(10,37,64,0.20) !important; }
+  .text-white\/15 { color: rgba(10,37,64,0.15) !important; }
+  .text-white\/10 { color: rgba(10,37,64,0.10) !important; }
+
+  /* border-white/XX → light gray borders */
+  .border-white\/5  { border-color: rgba(10,37,64,0.07) !important; }
+  .border-white\/6  { border-color: rgba(10,37,64,0.08) !important; }
+  .border-white\/8  { border-color: rgba(10,37,64,0.10) !important; }
+  .border-white\/10 { border-color: rgba(10,37,64,0.12) !important; }
+  .border-white\/12 { border-color: rgba(10,37,64,0.14) !important; }
+  .border-white\/15 { border-color: rgba(10,37,64,0.16) !important; }
+  .border-white\/18 { border-color: rgba(10,37,64,0.18) !important; }
+  .border-white\/20 { border-color: rgba(10,37,64,0.20) !important; }
+  .border-white\/25 { border-color: rgba(10,37,64,0.22) !important; }
+  .border-white\/30 { border-color: rgba(10,37,64,0.25) !important; }
+  .border-white\/35 { border-color: rgba(10,37,64,0.28) !important; }
+  .border-white\/45 { border-color: rgba(10,37,64,0.32) !important; }
+
+  /* bg-white/XX → light surfaces */
+  .bg-white\/3  { background-color: rgba(10,37,64,0.03) !important; }
+  .bg-white\/4  { background-color: rgba(10,37,64,0.04) !important; }
+  .bg-white\/5  { background-color: rgba(255,255,255,0.9) !important; }
+  .bg-white\/8  { background-color: rgba(255,255,255,0.95) !important; }
+  .bg-white\/10 { background-color: #ffffff !important; }
 
   @keyframes pulseGlow {
     0%, 100% { opacity: 0.5; }
@@ -85,14 +122,15 @@
 
   /* ── Cards ─────────────────────────────────────────────── */
   .card-dark {
-    background: rgba(255,255,255,0.03);
-    border: 1px solid rgba(255,255,255,0.08);
+    background: #ffffff;
+    border: 1px solid #E4E8EF;
     padding: 2rem;
+    box-shadow: 0 1px 4px rgba(10,37,64,0.06);
   }
 
   .card-indigo {
-    background: rgba(99,91,255,0.08);
-    border: 1px solid rgba(99,91,255,0.25);
+    background: rgba(99,91,255,0.05);
+    border: 1px solid rgba(99,91,255,0.2);
     padding: 2rem;
   }
 
@@ -100,7 +138,7 @@
   .label-overline {
     color: #635BFF;
     font-family: 'Plus Jakarta Sans', sans-serif;
-    font-weight: 600;
+    font-weight: 700;
     font-size: 0.688rem;
     letter-spacing: 0.16em;
     text-transform: uppercase;
