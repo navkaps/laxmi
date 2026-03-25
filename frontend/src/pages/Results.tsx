@@ -69,13 +69,19 @@ const Results: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [showPrompt, setShowPrompt] = useState(false);
   const [factIndex, setFactIndex] = useState(0);
+  const [showRefine, setShowRefine] = useState(false);
+  const [feedback, setFeedback] = useState("");
+  const [feedbackHistory, setFeedbackHistory] = useState<string[]>([]);
 
   const fetchRecommendation = useCallback(
-    (level: number, isInitial = false) => {
+    (level: number, isInitial = false, feedbackText?: string) => {
       if (!isInitial) setTuning(true);
 
       axios
-        .post(`${process.env.REACT_APP_API_URL}/api/recommend`, { profile, userInfo, tuneLevel: level })
+        .post(`${process.env.REACT_APP_API_URL}/api/recommend`, {
+          profile, userInfo, tuneLevel: level,
+          ...(feedbackText ? { feedback: feedbackText } : {}),
+        })
         .then((res) => {
           setRecommendation(res.data);
           if (isInitial) setTuneLevel(res.data.profileLevel ?? 2);
@@ -92,6 +98,20 @@ const Results: React.FC = () => {
     },
     [profile]
   );
+
+  const handleRefine = () => {
+    if (!feedback.trim()) return;
+    setFeedbackHistory(prev => [...prev, feedback.trim()]);
+    setShowRefine(false);
+    setLoading(true);
+    setLoadingStep(0);
+    const stepInterval = setInterval(() => {
+      setLoadingStep((s) => (s < LOADING_STEPS.length - 1 ? s + 1 : s));
+    }, 1600);
+    fetchRecommendation(tuneLevel, false, feedback.trim());
+    setFeedback("");
+    setTimeout(() => clearInterval(stepInterval), LOADING_STEPS.length * 1600 + 500);
+  };
 
   useEffect(() => {
     if (!profile) { navigate("/"); return; }
@@ -631,11 +651,8 @@ const Results: React.FC = () => {
         </motion.div>
 
         {/* Actions */}
-        <div className="flex gap-4 no-print">
-          <button
-            onClick={() => window.print()}
-            className="btn-primary"
-          >
+        <div className="flex gap-4 no-print flex-wrap">
+          <button onClick={() => window.print()} className="btn-primary">
             Download report
           </button>
           <button onClick={() => navigate("/start")} className="btn-ghost">
@@ -645,6 +662,85 @@ const Results: React.FC = () => {
             Assess existing portfolio
           </button>
         </div>
+
+        {/* Refine portfolio */}
+        <motion.div className="no-print border border-white/8 rounded-xl overflow-hidden" layout>
+          {!showRefine ? (
+            <button
+              onClick={() => setShowRefine(true)}
+              className="w-full flex items-center justify-between px-6 py-4 text-left hover:bg-white/3 transition-colors group"
+            >
+              <div className="flex items-center gap-3">
+                <div className="w-7 h-7 rounded-full border border-gold-500/30 flex items-center justify-center text-gold-500/60 text-sm group-hover:border-gold-500/60 group-hover:text-gold-500 transition-colors">✦</div>
+                <div>
+                  <p className="font-sans text-sm font-semibold text-white/70 group-hover:text-white/90 transition-colors">Something not right?</p>
+                  <p className="font-sans text-xs text-white/30 mt-0.5">Tell Laxmi what to change and she'll rebuild your portfolio</p>
+                </div>
+              </div>
+              <span className="text-white/20 text-xs group-hover:text-white/40 transition-colors">Refine →</span>
+            </button>
+          ) : (
+            <motion.div
+              initial={{ opacity: 0, y: 6 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="p-6 space-y-4"
+            >
+              <div className="flex items-center justify-between">
+                <p className="font-sans text-sm font-semibold text-white/80">What would you like to change?</p>
+                <button onClick={() => setShowRefine(false)} className="text-white/20 hover:text-white/50 text-xs transition-colors">✕ Cancel</button>
+              </div>
+
+              {/* Quick chips */}
+              <div className="flex flex-wrap gap-2">
+                {[
+                  "Remove Apple (AAPL)",
+                  "No fossil fuel companies",
+                  "ESG / ethical investments only",
+                  "More bonds, less risk",
+                  "Add more international exposure",
+                  "No individual stocks, ETFs only",
+                  "More tech sector",
+                  "Include gold or commodities",
+                ].map(chip => (
+                  <button
+                    key={chip}
+                    onClick={() => setFeedback(prev => prev ? `${prev}. ${chip}` : chip)}
+                    className="px-3 py-1.5 rounded-full border border-white/10 text-white/40 text-xs hover:border-gold-500/40 hover:text-white/70 transition-all"
+                  >
+                    {chip}
+                  </button>
+                ))}
+              </div>
+
+              {/* Text input */}
+              <textarea
+                value={feedback}
+                onChange={e => setFeedback(e.target.value)}
+                placeholder="e.g. I don't want Apple because of ethical reasons, and I'd prefer more exposure to European markets..."
+                rows={3}
+                className="w-full bg-white/4 border border-white/10 rounded-lg px-4 py-3 text-white/80 text-sm font-sans placeholder-white/20 resize-none outline-none focus:border-gold-500/40 transition-colors"
+              />
+
+              {/* Previous feedback history */}
+              {feedbackHistory.length > 0 && (
+                <div className="space-y-1">
+                  <p className="text-white/20 text-xs font-sans">Previous requests carried forward:</p>
+                  {feedbackHistory.map((f, i) => (
+                    <p key={i} className="text-white/25 text-xs font-sans pl-3 border-l border-white/10">{f}</p>
+                  ))}
+                </div>
+              )}
+
+              <button
+                onClick={handleRefine}
+                disabled={!feedback.trim()}
+                className="btn-primary disabled:opacity-30 disabled:cursor-not-allowed"
+              >
+                Rebuild portfolio →
+              </button>
+            </motion.div>
+          )}
+        </motion.div>
 
         {/* Disclaimer */}
         <div className="border-t border-white/5 pt-8">

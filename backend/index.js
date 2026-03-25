@@ -363,7 +363,7 @@ function getIndiaPortfolioProfiles() {
 
 // ─── Routes ─────────────────────────────────────────────────────────────────────
 app.post("/api/recommend", async (req, res) => {
-  const { profile, userInfo, tuneLevel } = req.body;
+  const { profile, userInfo, tuneLevel, feedback } = req.body;
   if (!profile) return res.status(400).json({ error: "Profile is required" });
 
   const country = userInfo?.country || "US";
@@ -422,7 +422,7 @@ ${profile.wishlist ? `- Client wishlist / hard exclusions (MUST be honoured): ${
 ${profile.focus_areas?.length ? `- Preferred sectors: ${profile.focus_areas.join(", ")}` : ""}
 ${profile.avoid_areas?.length ? `- Sectors / instruments to exclude: ${profile.avoid_areas.join(", ")}` : ""}
 ${profile.investment_style ? `- ETF vs stocks preference: ${{ etfs_only: "ETFs only — no individual stocks", mostly_etfs: "Mostly ETFs with some individual stock picks", mix: "Equal mix of ETFs and individual stocks", mostly_stocks: "Mostly individual stocks with some ETF exposure", no_preference: "No preference — optimise purely for risk-adjusted return" }[profile.investment_style] || profile.investment_style}` : ""}
-
+${feedback ? `\nCLIENT REFINEMENT REQUEST (HIGHEST PRIORITY — must be fully addressed)\n======================\n${feedback}\n\nThis is a revised recommendation. The client has reviewed the previous portfolio and explicitly requested the above changes. Every point must be reflected in the new portfolio.` : ""}
 YOUR TASK
 =========
 1. Recommend a specific asset allocation across equities, fixed income, alternatives, and cash
