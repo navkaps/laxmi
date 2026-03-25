@@ -4,27 +4,27 @@ module.exports = {
   theme: {
     extend: {
       colors: {
-        // True black backgrounds
+        // Stripe deep navy backgrounds
         navy: {
-          950: "#080808",
-          900: "#0F0F0F",
-          800: "#171717",
-          700: "#1F1F1F",
-          600: "#272727",
+          950: "#0A2540",
+          900: "#0D2B4A",
+          800: "#102138",
+          700: "#163050",
+          600: "#1E3A5F",
         },
-        // Warm gold — primary accent
+        // Stripe indigo — primary accent
         gold: {
-          300: "#EDD28A",
-          400: "#D4A843",
-          500: "#C9A96E",
-          600: "#A07A35",
-          700: "#7A5A22",
+          300: "#9D98FF",
+          400: "#7C75FF",
+          500: "#635BFF",
+          600: "#4B44CC",
+          700: "#3830A3",
         },
         // Text
         cream: {
-          50: "#FFFFFF",
-          100: "#F5F0E8",
-          200: "#C8BEA8",
+          50:  "#FFFFFF",
+          100: "#F0F2FF",
+          200: "#C4C2D8",
         },
         // Keep these for error states only
         violet: {
