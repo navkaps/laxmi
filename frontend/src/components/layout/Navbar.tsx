@@ -11,7 +11,7 @@ const Navbar: React.FC = () => {
         <div className="w-7 h-7 border border-gold-500/60 flex items-center justify-center">
           <div className="w-2 h-2 bg-gold-500 rotate-45" />
         </div>
-        <span className="font-display text-lg text-cream-50 tracking-wide">Laxmi</span>
+        <span className="font-display text-lg text-cream-50 tracking-wide">Plutus</span>
       </Link>
 
       <div className="flex items-center gap-8">

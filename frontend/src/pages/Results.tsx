@@ -52,7 +52,7 @@ const DEMO_PROFILE: UserProfile = {
   max_loss: 25, emergency_fund: "yes_full", existing_debt: "none",
   income_stability: "stable", account_type: "roth_ira", investment_style: "mostly_etfs",
 };
-const DEMO_USER: UserInfo = { name: "Demo", email: "demo@laxmi.ai", phone: "", country: "US" };
+const DEMO_USER: UserInfo = { name: "Demo", email: "demo@plutus.ai", phone: "", country: "US" };
 
 const Results: React.FC = () => {
   const location = useLocation();
@@ -309,8 +309,8 @@ const Results: React.FC = () => {
           <rect width="28" height="28" rx="6" fill="url(#g-logo)"/>
           <path d="M14 20 L14 9 M10 13 L14 9 L18 13" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
         </svg>
-        <span className="font-display text-lg font-bold tracking-tight text-white">Laxmi</span>
-        <span className="hidden sm:inline font-sans text-xs text-white/50 tracking-wide border-l border-white/15 pl-2 ml-1">Your AI wealth advisor</span>
+        <span className="font-display text-lg font-bold tracking-tight text-white">Plutus</span>
+        <span className="hidden sm:inline font-sans text-xs text-white/50 tracking-wide border-l border-white/15 pl-2 ml-1">AI Wealth Advisory</span>
       </div>
 
       {/* Header */}
@@ -674,7 +674,7 @@ const Results: React.FC = () => {
                 <div className="w-7 h-7 rounded-full border border-gold-500/30 flex items-center justify-center text-gold-500/60 text-sm group-hover:border-gold-500/60 group-hover:text-gold-500 transition-colors">✦</div>
                 <div>
                   <p className="font-sans text-sm font-semibold text-white/70 group-hover:text-white/90 transition-colors">Something not right?</p>
-                  <p className="font-sans text-xs text-white/30 mt-0.5">Tell Laxmi what to change and she'll rebuild your portfolio</p>
+                  <p className="font-sans text-xs text-white/30 mt-0.5">Tell Plutus what to change and it'll rebuild your portfolio</p>
                 </div>
               </div>
               <span className="text-white/20 text-xs group-hover:text-white/40 transition-colors">Refine →</span>
